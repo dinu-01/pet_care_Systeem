@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"/>
+    <title>Happy Paws • Manage Pet Profiles</title>
+
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+          referrerpolicy="no-referrer"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet"/>
+
+    <style>
+        :root {
+            /* Light theme */
+            --bg: #f3f6fb;
+            --panel: #ffffff;
+            --text: #0f172a;
+            --muted: #6b7280;
+            --border: rgba(15, 23, 42, .1);
+            --primary: #6d5dfc;
+            --secondary: #22c55e;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --card-shadow: 0 12px 32px rgba(2, 6, 23, .08);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --dur: 360ms;
+            --easing: cubic-bezier(.2, .8, .2, 1);
+            --glass: rgba(255, 255, 255, .6);
+        }
+
+        [data-theme="dark"] {
+            --bg: #0b1020;
+            --panel: #111831;
+            --text: #e8ecf3;
+            --muted: #9aa3b2;
+            --border: rgba(255, 255, 255, .08);
+            --primary: #7c5cff;
+            --secondary: #22c55e;
+            --card-shadow: 0 12px 36px rgba(0, 0, 0, .35);
+            --glass: rgba(17, 24, 49, .6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        html, body {
+            height: 100%
+        }
+
+        body {
+            font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            color: var(--text);
+            background: radial-gradient(1200px 600px at -10% -10%, rgba(124, 92, 255, 0.14), transparent 40%),
+            radial-gradient(1000px 700px at 110% 20%, rgba(34, 197, 94, 0.14), transparent 35%),
+            var(--bg);
+            line-height: 1.35;
+        }
+        /* ===== Background Video ===== */
+        #bgVideo {
+            position:fixed;top:0;left:0;width:100%;height:100%;
+            object-fit:cover;z-index:-1;
+            opacity:.35;filter:brightness(.85);
+            transition:opacity .8s ease;
+        }
+        [data-theme="dark"] #bgVideo{opacity:.25;filter:brightness(.6)}
+        /* ====== Layout ====== */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns:280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ====== Sidebar ====== */
+        .sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(124, 92, 255, .18), rgba(34, 197, 94, .18)),
+            linear-gradient(160deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .14);
+            backdrop-filter: blur(6px);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
+            animation: pop-in var(--dur) var(--easing) both
+        }
+
+        .brand i {
+            font-size: 22px
+        }
+
+        .brand h2 {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: .2px
+        }
+
+        .sidebar small {
+            opacity: .95
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            display: grid;
+            gap: 6px;
+            margin-top: 8px
+        }
+
+        .sidebar-menu a {
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            transition: transform .22s var(--easing), background .22s var(--easing)
+        }
+
+        .sidebar-menu a i {
+            width: 22px;
+            text-align: center;
+            opacity: .95
+        }
+
+        .sidebar-menu a:hover {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, .16)
+        }
+
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, .22);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22)
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            display: grid;
+            gap: 10px
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #fff;
+            color: #111;
+            transition: transform .22s var(--easing)
+        }
+
+        .btn:hover {
+            transform: translateY(-2px)
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #a855f7);
+            color: #fff
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            color: #fff
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: #fff
+        }
+
+        .collapse-toggle {
+            position: absolute;
+            top: 16px;
+            right: -14px;
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 50%;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        /* ====== Main ====== */
+        .main-content {
+            padding: 26px min(4vw, 36px);
+            display: grid;
+            gap: 22px
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .title h1 {
+            font-size: clamp(20px, 2.4vw, 28px);
+            font-weight: 800;
+            letter-spacing: .2px
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 12px;
+            box-shadow: var(--card-shadow)
+        }
+
+        .user-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(140deg, var(--primary), var(--secondary));
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: .5px
+        }
+
+        .user-meta small {
+            color: var(--muted)
+        }
+
+        /* ====== Tabs ====== */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px dashed var(--border)
+        }
+
+        .tab {
+            border: none;
+            background: transparent;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--muted);
+            border-bottom: 3px solid transparent;
+            transition: border-color var(--dur) var(--easing), color var(--dur) var(--easing)
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary)
+        }
+
+        .tab-content {
+            display: none;
+            animation: fade-in var(--dur) var(--easing)
+        }
+
+        .tab-content.active {
+            display: block
+        }
+
+        /* ====== Card / Form ====== */
+        .form-container {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--card-shadow);
+            padding: 20px;
+            max-width: 980px;
+            margin-inline: auto;
+            position: relative;
+            overflow: hidden
+        }
+
+        .form-container:before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            background: radial-gradient(600px 220px at -10% -10%, rgba(124, 92, 255, .14), transparent 40%);
+            pointer-events: none;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 14px
+        }
+
+        .form-group {
+            margin-bottom: 14px
+        }
+
+        .form-group label {
+            display: block;
+            margin: 0 0 6px 2px;
+            font-weight: 600
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 12px;
+            border: 1.8px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text);
+            transition: border-color var(--dur) var(--easing), transform var(--dur) var(--easing)
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            transform: translateY(-1px)
+        }
+
+        /* Upload */
+        .image-upload {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color var(--dur) var(--easing)
+        }
+
+        .image-upload:hover {
+            border-color: var(--primary)
+        }
+
+        .image-upload i {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: block
+        }
+
+        .image-preview {
+            max-width: 220px;
+            max-height: 220px;
+            border-radius: 10px;
+            display: none;
+            margin: 12px auto 0
+        }
+
+        /* Pets Grid */
+        .pets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px
+        }
+
+        .pet-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transform: translateY(8px);
+            opacity: 0;
+            animation: slide-up var(--dur) var(--easing) forwards;
+        }
+
+        .pet-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .pet-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pet-info {
+            padding: 16px
+        }
+
+        .pet-name {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 6px
+        }
+
+        .pet-details {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 12px
+        }
+
+        .pet-actions {
+            display: flex;
+            gap: 8px
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px
+        }
+
+        .modal.active {
+            display: flex
+        }
+
+        .modal-content {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: min(560px, 94vw);
+            max-height: 80vh;
+            overflow: auto;
+            box-shadow: var(--card-shadow);
+            animation: pop-in var(--dur) var(--easing)
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .close-modal {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 22px;
+            cursor: pointer
+        }
+
+        /* Toast */
+        .notification {
+            position: fixed;
+            top: 22px;
+            right: 22px;
+            z-index: 1100;
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 12px;
+            display: grid;
+            grid-auto-flow: column;
+            gap: 10px;
+            box-shadow: var(--card-shadow);
+            transform: translateX(40px);
+            opacity: 0;
+            animation: toast-in var(--dur) var(--easing) forwards;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, var(--success), #22c55e)
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, var(--error), #f97316)
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, var(--primary), #4f46e5)
+        }
+
+        /* Responsive */
+        @media (max-width: 1020px) {
+            .dashboard-container {
+                grid-template-columns:84px 1fr
+            }
+
+            .sidebar .label {
+                display: none
+            }
+
+            .brand h2, .sidebar small {
+                display: none
+            }
+
+            .form-row {
+                grid-template-columns:1fr
+            }
+        }
+
+        @media (max-width: 720px) {
+            .dashboard-container {
+                grid-template-columns:1fr
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 260px;
+                transform: translateX(-100%);
+                transition: transform var(--dur) var(--easing);
+                z-index: 1001
+            }
+
+            .sidebar.open {
+                transform: translateX(0)
+            }
+
+            .collapse-toggle {
+                top: 16px;
+                left: 16px;
+                right: auto
+            }
+
+            .main-content {
+                padding-top: 70px
+            }
+        }
+
+        /* Animations */
+        @keyframes slide-up {
+            from {
+                transform: translateY(14px);
+                opacity: 0
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        @keyframes pop-in {
+            from {
+                transform: scale(.96);
+                opacity: 0
+            }
+            to {
+                transform: scale(1);
+                opacity: 1
+            }
+        }
+
+        @keyframes toast-in {
+            from {
+                transform: translateX(40px);
+                opacity: 0
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1
+            }
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0
+            }
+            to {
+                opacity: 1
+            }
+        }
+
+        /* Loading states */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--border) 25%, var(--panel) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+<!-- Background video -->
+<video autoplay muted loop playsinline id="bgVideo">
+    <source src="videos/petcare1.mp4" type="video/mp4">
+</video>
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <button class="collapse-toggle" id="toggleSidebar" title="Menu"><i class="fa-solid fa-bars"></i></button>
+        <div class="brand"><i class="fa-solid fa-paw"></i>
+            <h2>Happy Paws</h2></div>
+        <small>Pet Owner Dashboard</small>
+
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="fas fa-home"></i> <span class="label">Dashboard</span></a></li>
+            <li><a href="pet.html" class="active"><i class="fas fa-paw"></i> <span class="label">My Pets</span></a>
+            </li>
+            <li><a href="AppimentManage.html"><i class="fas fa-calendar-check"></i> <span
+                    class="label">Appointments</span></a></li>
+            <li><a href="product.html"><i class="fas fa-shopping-cart"></i> <span class="label">Pet Shop</span></a>
+            </li>
+            <li><a href="owner_medical_reports.html"><i class="fas fa-file-medical"></i> <span class="label">Medical Record</span></a>
+            </li>
+            <li><a href="owner_grooming_reports.html"><i class="fas fa-scissors"></i> <span class="label">Grooming Records</span></a>
+            </li>
+            <li><a href="#"><i class="fas fa-cog"></i> <span class="label">Settings</span></a></li>
+            <li><a href="index.html"><i class="fas fa-sign-out-alt"></i> <span class="label">Logout</span></a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <button class="btn" id="themeToggle"><i class="fa-solid fa-moon"></i> <span
+                    class="label">Toggle Theme</span></button>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="main-content">
+        <div class="header">
+            <div class="title"><h1>Manage Pet Profiles</h1></div>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">PO</div>
+                <div class="user-meta">
+                    <strong id="userFullName">Pet Owner</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="add-pet">Add New Pet</button>
+            <button class="tab" data-tab="view-pets">View My Pets</button>
+        </div>
+
+        <!-- Add Pet -->
+        <section id="add-pet" class="tab-content active">
+            <div class="form-container">
+                <h2 style="margin-bottom:14px;">Add New Pet Profile</h2>
+                <p style="color:var(--muted); margin-bottom:18px;">Upload a photo and fill the details below.</p>
+
+                <form id="petForm">
+                    <div class="form-group">
+                        <label>Pet Photo</label>
+                        <div class="image-upload" id="uploadBox"
+                             onclick="document.getElementById('imageInput').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to upload pet photo</p>
+                            <img id="imagePreview" class="image-preview" alt="Preview">
+                        </div>
+                        <input type="file" id="imageInput" accept="image/*" style="display:none"/>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="petName">Pet Name *</label>
+                            <input type="text" id="petName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="petType">Pet Type *</label>
+                            <select id="petType" class="form-control" required>
+                                <option value="">Select Type</option>
+                                <option value="dog">Dog</option>
+                                <option value="cat">Cat</option>
+                                <option value="bird">Bird</option>
+                                <option value="rabbit">Rabbit</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="petBreed">Breed</label>
+                            <input type="text" id="petBreed" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="petAge">Age</label>
+                            <input type="number" id="petAge" class="form-control" min="0" max="50">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="petGender">Gender</label>
+                            <select id="petGender" class="form-control">
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="petWeight">Weight (kg)</label>
+                            <input type="number" id="petWeight" class="form-control" step="0.1" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="petColor">Color/Markings</label>
+                        <input type="text" id="petColor" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="petDescription">Description/Notes</label>
+                        <textarea id="petDescription" class="form-control" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="vetInfo">Veterinarian Information</label>
+                        <input type="text" id="vetInfo" class="form-control" placeholder="Vet name and contact">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; margin-top:6px;">
+                        <i class="fas fa-plus"></i> Add Pet Profile
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- View Pets -->
+        <section id="view-pets" class="tab-content">
+            <div class="form-container">
+                <h2 style="margin-bottom:14px;">My Pets</h2>
+                <div id="petsList" class="pets-grid">
+                    <!-- Loading skeleton -->
+                    <div class="pet-card">
+                        <div class="pet-image skeleton" style="height: 200px;"></div>
+                        <div class="pet-info">
+                            <div class="pet-name skeleton" style="height: 24px; margin-bottom: 8px;"></div>
+                            <div class="pet-details">
+                                <div class="skeleton" style="height: 16px; margin-bottom: 4px;"></div>
+                                <div class="skeleton" style="height: 16px; margin-bottom: 4px;"></div>
+                                <div class="skeleton" style="height: 16px; margin-bottom: 12px;"></div>
+                            </div>
+                            <div class="pet-actions">
+                                <div class="btn skeleton" style="flex: 1; height: 36px;"></div>
+                                <div class="btn skeleton" style="flex: 1; height: 36px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Edit Modal -->
+<div id="editPetModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Pet Profile</h2>
+            <button class="close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <form id="editPetForm" style="padding:18px;">
+            <input type="hidden" id="editPetId">
+            <div class="form-group">
+                <label>Pet Photo</label>
+                <div class="image-upload" onclick="document.getElementById('editImageInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload new photo</p>
+                    <img id="editImagePreview" class="image-preview" alt="Preview">
+                </div>
+                <input type="file" id="editImageInput" accept="image/*" style="display:none"/>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editPetName">Pet Name *</label>
+                    <input type="text" id="editPetName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPetType">Pet Type *</label>
+                    <select id="editPetType" class="form-control" required>
+                        <option value="">Select Type</option>
+                        <option value="dog">Dog</option>
+                        <option value="cat">Cat</option>
+                        <option value="bird">Bird</option>
+                        <option value="rabbit">Rabbit</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editPetBreed">Breed</label>
+                    <input type="text" id="editPetBreed" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="editPetAge">Age</label>
+                    <input type="number" id="editPetAge" class="form-control" min="0" max="50">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="editPetGender">Gender</label>
+                    <select id="editPetGender" class="form-control">
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editPetWeight">Weight (kg)</label>
+                    <input type="number" id="editPetWeight" class="form-control" step="0.1" min="0">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="editPetColor">Color/Markings</label>
+                <input type="text" id="editPetColor" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="editPetDescription">Description/Notes</label>
+                <textarea id="editPetDescription" class="form-control" rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="editVetInfo">Veterinarian Information</label>
+                <input type="text" id="editVetInfo" class="form-control" placeholder="Vet name and contact">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:6px;">
+                <button type="submit" class="btn btn-success" style="flex:1">Update Pet</button>
+                <button type="button" class="btn btn-danger" id="btnDeleteFromModal" style="flex:1">
+                    <i class="fas fa-trash"></i> Delete Pet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    /* =========================
+       🔧 Configuration
+    ========================= */
+    const BASE_URL = "http://localhost:8080/api/v1/pets";
+    let currentOwnerId = null;
+    let currentEditId = null;
+
+    /* =========================
+       🔔 Helper: Toast messages
+    ========================= */
+    function toast(message, type = "info") {
+        document.querySelectorAll(".notification").forEach(n => n.remove());
+        const el = document.createElement("div");
+        el.className = `notification ${type}`;
+        el.innerHTML = `
+            <i class="fa-solid ${
+            type === "success"
+                ? "fa-circle-check"
+                : type === "error"
+                    ? "fa-triangle-exclamation"
+                    : "fa-circle-info"
+        }"></i>
+            <span>${message}</span>`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4500);
+    }
+
+    /* =========================
+       🖼️ Image Preview & Helper Functions
+    ========================= */
+    function previewImage(event, targetId) {
+        const preview = document.getElementById(targetId);
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const r = new FileReader();
+        r.onload = e => {
+            preview.src = e.target.result;
+            preview.style.display = "block";
+        };
+        r.readAsDataURL(file);
+    }
+
+    // ✅ FIXED: Proper image URL handling
+    function getImageUrl(imageUrl) {
+        if (!imageUrl) {
+            return null;
+        }
+
+        // If it's already a full URL, return as is
+        if (imageUrl.startsWith('http')) {
+            return imageUrl;
+        }
+
+        // If it's a relative path, make it absolute
+        if (imageUrl.startsWith('/')) {
+            return `http://localhost:8080${imageUrl}`;
+        }
+
+        // Default case - assume it's a filename
+        return `http://localhost:8080/uploads/pets/${imageUrl}`;
+    }
+
+    // ✅ FIXED: Image error handling
+    function handleImageError(img) {
+        img.style.display = 'none';
+        const parent = img.parentElement;
+        if (parent.classList.contains('pet-image')) {
+            parent.innerHTML = `
+                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:white; font-size:14px; background:linear-gradient(135deg, var(--primary), var(--secondary));">
+                    <i class="fas fa-paw" style="font-size:32px; margin-right:8px;"></i>
+                    <span>No Image</span>
+                </div>
+            `;
+        }
+    }
+
+    /* =========================
+       🌗 Theme Setup
+    ========================= */
+    function setTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("hp_theme", theme);
+    }
+
+    /* =========================
+       🚀 Init
+    ========================= */
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Theme setup
+        const savedTheme = localStorage.getItem("hp_theme") || "dark";
+        setTheme(savedTheme);
+
+        // Sidebar toggle
+        const sidebar = document.getElementById("sidebar");
+        document.getElementById("toggleSidebar")?.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+        });
+        document.addEventListener("click", e => {
+            if (
+                window.innerWidth <= 720 &&
+                !sidebar.contains(e.target) &&
+                !e.target.closest("#toggleSidebar")
+            ) {
+                sidebar.classList.remove("open");
+            }
+        });
+
+        // Theme toggle button
+        document.getElementById("themeToggle")?.addEventListener("click", () => {
+            const cur = document.documentElement.getAttribute("data-theme");
+            setTheme(cur === "dark" ? "light" : "dark");
+            toast(`Switched to ${cur === "dark" ? "Light" : "Dark"} mode`, "success");
+        });
+
+        // Check user
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser) {
+            alert("Please log in first");
+            window.location.href = "login.html";
+            return;
+        }
+        currentOwnerId = currentUser.id;
+        localStorage.setItem("currentOwnerId", currentOwnerId);
+
+        // Display user info
+        document.getElementById("userFullName").textContent = `${
+            currentUser.firstName || "Pet"
+        } ${currentUser.lastName || "Owner"}`;
+        document.getElementById("userAvatar").textContent = `${(
+            currentUser.firstName?.[0] || "P"
+        ).toUpperCase()}${(currentUser.lastName?.[0] || "O").toUpperCase()}`;
+
+        // Tab navigation
+        document.querySelectorAll(".tab").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                const tabName = btn.dataset.tab;
+                document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+                document.getElementById(tabName).classList.add("active");
+                if (tabName === "view-pets") loadPets();
+            });
+        });
+
+        // Image previews
+        document.getElementById("imageInput")?.addEventListener("change", e =>
+            previewImage(e, "imagePreview")
+        );
+        document.getElementById("editImageInput")?.addEventListener("change", e =>
+            previewImage(e, "editImagePreview")
+        );
+
+        // Modal close
+        document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+        document.getElementById("editPetModal").addEventListener("click", e => {
+            if (e.target.id === "editPetModal") closeModal();
+        });
+
+        // Delete button in modal
+        document.getElementById("btnDeleteFromModal").addEventListener("click", () => {
+            if (!currentEditId) return;
+            deletePet(currentEditId);
+        });
+
+        // Create pet
+        document.getElementById("petForm").addEventListener("submit", onCreatePet);
+
+        // Update pet
+        document.getElementById("editPetForm").addEventListener("submit", onUpdatePet);
+
+        // Health check before loading
+        try {
+            const health = await fetch(`${BASE_URL}/health`);
+            if (!health.ok) toast("⚠️ Backend not reachable!", "error");
+            else toast("✅ Connected to Pet API", "success");
+        } catch (e) {
+            toast("❌ Cannot connect to backend!", "error");
+        }
+
+        await loadPets();
+    });
+
+    /* =========================
+       🐾 CREATE PET
+    ========================= */
+    async function onCreatePet(e) {
+        e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        try {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding Pet...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append("name", document.getElementById("petName").value.trim());
+            formData.append("species", document.getElementById("petType").value);
+            formData.append("breed", document.getElementById("petBreed").value.trim());
+            formData.append("gender", document.getElementById("petGender").value);
+            formData.append("weight", document.getElementById("petWeight").value);
+            formData.append("color", document.getElementById("petColor").value.trim());
+            formData.append("medicalNotes", document.getElementById("petDescription").value.trim());
+            formData.append("microchipId", "MC-" + Date.now());
+            formData.append("ownerId", currentOwnerId);
+
+            const img = document.getElementById("imageInput");
+            if (img.files.length > 0) formData.append("image", img.files[0]);
+
+            const res = await fetch(`${BASE_URL}/with-image`, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || "Failed to add pet");
+            }
+
+            const data = await res.json();
+            toast(`✅ Pet '${data.name}' added successfully!`, "success");
+            e.target.reset();
+            document.getElementById("imagePreview").style.display = "none";
+            document.querySelector('.tab[data-tab="view-pets"]').click();
+
+        } catch (err) {
+            console.error("Create pet error:", err);
+            toast("❌ Error adding pet: " + err.message, "error");
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    /* =========================
+       📋 LOAD PETS (View) - FIXED IMAGE DISPLAY
+    ========================= */
+    async function loadPets() {
+        const list = document.getElementById("petsList");
+        list.innerHTML = `
+            <div class="pet-card">
+                <div class="pet-image skeleton" style="height: 200px;"></div>
+                <div class="pet-info">
+                    <div class="pet-name skeleton" style="height: 24px; margin-bottom: 8px;"></div>
+                    <div class="pet-details">
+                        <div class="skeleton" style="height: 16px; margin-bottom: 4px;"></div>
+                        <div class="skeleton" style="height: 16px; margin-bottom: 4px;"></div>
+                        <div class="skeleton" style="height: 16px; margin-bottom: 12px;"></div>
+                    </div>
+                    <div class="pet-actions">
+                        <div class="btn skeleton" style="flex: 1; height: 36px;"></div>
+                        <div class="btn skeleton" style="flex: 1; height: 36px;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        try {
+            const res = await fetch(`${BASE_URL}/owner/${currentOwnerId}`);
+            if (res.status === 204) {
+                list.innerHTML = `
+                    <div style="text-align:center; padding:3rem; color:var(--muted); background:var(--panel); border:1px dashed var(--border); border-radius:12px;">
+                        <i class="fas fa-paw" style="font-size:3rem; margin-bottom:1rem; color:var(--primary);"></i>
+                        <h3>No pets found</h3>
+                        <p>Add your first pet to get started!</p>
+                        <button class="btn btn-primary" onclick="document.querySelector('.tab[data-tab=add-pet]').click()">Add New Pet</button>
+                    </div>`;
+                return;
+            }
+
+            if (!res.ok) throw new Error("Failed to load pets");
+
+            const pets = await res.json();
+            list.innerHTML = "";
+
+            pets.forEach((pet, index) => {
+                const card = document.createElement("div");
+                card.className = "pet-card";
+                card.style.animationDelay = `${index * 0.1}s`;
+
+                // ✅ FIXED: Proper image URL handling
+                const imageUrl = getImageUrl(pet.imageUrl);
+
+                card.innerHTML = `
+                    <div class="pet-image">
+                        ${imageUrl ?
+                    `<img src="${imageUrl}"
+                                  alt="${pet.name}"
+                                  onerror="handleImageError(this)"
+                                  loading="lazy">`
+                    :
+                    `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:white; font-size:14px; background:linear-gradient(135deg, var(--primary), var(--secondary));">
+                                <i class="fas fa-paw" style="font-size:32px; margin-right:8px;"></i>
+                                <span>No Image</span>
+                            </div>`
+                }
+                    </div>
+                    <div class="pet-info">
+                        <h3 class="pet-name">${pet.name || "Unnamed"}</h3>
+                        <div class="pet-details">
+                            <p><strong>Species:</strong> ${pet.species || "-"}</p>
+                            <p><strong>Breed:</strong> ${pet.breed || "-"}</p>
+                            <p><strong>Color:</strong> ${pet.color || "-"}</p>
+                            ${pet.gender ? `<p><strong>Gender:</strong> ${pet.gender}</p>` : ''}
+                            ${pet.weight ? `<p><strong>Weight:</strong> ${pet.weight} kg</p>` : ''}
+                        </div>
+                        <div class="pet-actions">
+                            <button class="btn btn-primary" onclick="openEditPet(${pet.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger" onclick="deletePet(${pet.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+
+        } catch (err) {
+            console.error("Load pets error:", err);
+            list.innerHTML = `
+                <div style="text-align:center; padding:2rem; color:var(--error);">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:1rem;"></i>
+                    <h3>Error loading pets</h3>
+                    <p>${err.message}</p>
+                    <button class="btn btn-primary" onclick="loadPets()">Try Again</button>
+                </div>
+            `;
+            toast("❌ Error loading pets: " + err.message, "error");
+        }
+    }
+
+    /* =========================
+       ✏️ OPEN EDIT MODAL - FIXED IMAGE DISPLAY
+    ========================= */
+    async function openEditPet(id) {
+        currentEditId = id;
+        try {
+            const res = await fetch(`${BASE_URL}/${id}`);
+            if (!res.ok) throw new Error("Pet not found");
+            const pet = await res.json();
+
+            document.getElementById("editPetId").value = pet.id;
+            document.getElementById("editPetName").value = pet.name || "";
+            document.getElementById("editPetType").value = pet.species || "";
+            document.getElementById("editPetBreed").value = pet.breed || "";
+            document.getElementById("editPetAge").value = pet.age ?? "";
+            document.getElementById("editPetGender").value = pet.gender || "";
+            document.getElementById("editPetWeight").value = pet.weight ?? "";
+            document.getElementById("editPetColor").value = pet.color || "";
+            document.getElementById("editPetDescription").value = pet.medicalNotes || "";
+
+            // ✅ FIXED: Proper image URL handling in modal
+            const prev = document.getElementById("editImagePreview");
+            const imageUrl = getImageUrl(pet.imageUrl);
+
+            if (imageUrl) {
+                prev.src = imageUrl;
+                prev.style.display = "block";
+                prev.onerror = function() {
+                    this.style.display = "none";
+                };
+            } else {
+                prev.style.display = "none";
+            }
+
+            document.getElementById("editPetModal").classList.add("active");
+        } catch (err) {
+            console.error("Open edit modal error:", err);
+            toast("❌ Error loading pet details: " + err.message, "error");
+        }
+    }
+
+    /* =========================
+       🔒 CLOSE MODAL
+    ========================= */
+    function closeModal() {
+        const modal = document.getElementById("editPetModal");
+        modal.classList.remove("active");
+        document.getElementById("editPetForm").reset();
+        currentEditId = null;
+    }
+
+    /* =========================
+       🧩 UPDATE PET
+    ========================= */
+    async function onUpdatePet(e) {
+        e.preventDefault();
+        if (!currentEditId) return toast("No pet selected for update", "error");
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        try {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append("name", document.getElementById("editPetName").value.trim());
+            formData.append("species", document.getElementById("editPetType").value);
+            formData.append("breed", document.getElementById("editPetBreed").value.trim());
+            formData.append("gender", document.getElementById("editPetGender").value);
+            formData.append("weight", document.getElementById("editPetWeight").value);
+            formData.append("color", document.getElementById("editPetColor").value.trim());
+            formData.append("medicalNotes", document.getElementById("editPetDescription").value.trim());
+
+            const img = document.getElementById("editImageInput");
+            if (img.files.length > 0) formData.append("image", img.files[0]);
+
+            const res = await fetch(`${BASE_URL}/${currentEditId}/with-image`, {
+                method: "PUT",
+                body: formData
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || "Failed to update pet");
+            }
+
+            toast("✅ Pet updated successfully!", "success");
+            closeModal();
+            await loadPets();
+
+        } catch (err) {
+            console.error("Update pet error:", err);
+            toast("❌ Error updating pet: " + err.message, "error");
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    /* =========================
+       🗑️ DELETE PET
+    ========================= */
+    async function deletePet(id) {
+        if (!confirm("Are you sure you want to delete this pet? This action cannot be undone.")) return;
+
+        try {
+            const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || "Failed to delete pet");
+            }
+            toast("🗑️ Pet deleted successfully!", "success");
+            closeModal();
+            await loadPets();
+        } catch (err) {
+            console.error("Delete pet error:", err);
+            toast("❌ Error deleting pet: " + err.message, "error");
+        }
+    }
+
+    /* =========================
+       Public export for inline calls
+    ========================= */
+    window.openEditPet = openEditPet;
+    window.deletePet = deletePet;
+    window.handleImageError = handleImageError;
+    window.loadPets = loadPets;
+</script>
+
+</body>
+</html>

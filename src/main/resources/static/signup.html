@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up – Happy Paws</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --primary:#7c5cff;
+            --secondary:#00d3a7;
+            --bg:#0b1020;
+            --card:#121935;
+            --text:#e8ecf3;
+            --muted:#9aa3b2;
+            --radius:16px;
+            --shadow:0 10px 30px rgba(0,0,0,.3);
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{
+            font-family:'Inter',sans-serif;
+            background:linear-gradient(135deg,#0b1020,#1a1f3a);
+            display:flex;align-items:center;justify-content:center;
+            min-height:100vh;
+        }
+        .signup-card{
+            width:400px;
+            background:rgba(18,25,53,.95);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:2.5rem;
+            color:var(--text);
+            animation:fadeUp .7s ease;
+        }
+        @keyframes fadeUp{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+        .logo{
+            display:flex;flex-direction:column;align-items:center;margin-bottom:1.5rem;
+        }
+        .logo .icon{
+            width:70px;height:70px;border-radius:50%;
+            background:linear-gradient(135deg,var(--primary),var(--secondary));
+            display:flex;align-items:center;justify-content:center;
+            color:white;font-size:2rem;
+            box-shadow:0 0 18px rgba(124,92,255,.4);
+            animation:pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+        .logo h2{margin-top:.8rem;font-weight:700;font-size:1.5rem;color:#fff}
+        form{display:flex;flex-direction:column;gap:1rem}
+        .form-group{position:relative}
+        .form-group i{
+            position:absolute;left:1rem;top:50%;
+            transform:translateY(-50%);
+            color:var(--muted);
+        }
+        input,select{
+            width:100%;
+            padding:.9rem 1rem .9rem 2.8rem;
+            background:rgba(255,255,255,0.05);
+            border:1.5px solid rgba(255,255,255,.1);
+            border-radius:var(--radius);
+            color:var(--text);
+            font-size:.95rem;
+            transition:.3s;
+            appearance:none;
+        }
+        input:focus,select:focus{
+            border-color:var(--secondary);
+            box-shadow:0 0 0 2px rgba(0,211,167,.35);
+            background:rgba(255,255,255,.08);
+            color:var(--text);
+        }
+
+        /* Dropdown style fix */
+        select {
+            background-image:linear-gradient(45deg,transparent 50%,var(--secondary) 50%),
+            linear-gradient(135deg,var(--secondary) 50%,transparent 50%);
+            background-position:calc(100% - 20px) calc(1.2em + 2px),
+            calc(100% - 15px) calc(1.2em + 2px);
+            background-size:5px 5px,5px 5px;
+            background-repeat:no-repeat;
+        }
+        select option {
+            background:#121935;
+            color:#e8ecf3;
+        }
+        select option:hover,select option:focus {
+            background:rgba(124,92,255,.25);
+            color:#fff;
+        }
+
+        /* password toggle */
+        .password-toggle {
+            position:absolute;
+            right:0.9rem;
+            top:50%;
+            transform:translateY(-50%);
+            background:none;
+            border:none;
+            color:var(--muted);
+            cursor:pointer;
+            font-size:1rem;
+            transition:color .3s ease,transform .2s ease;
+        }
+        .password-toggle:hover{color:var(--secondary);transform:translateY(-50%) scale(1.15);}
+        .password-toggle i{pointer-events:none;}
+        input[type="password"]{padding-right:2.8rem;}
+
+        /* checkbox */
+        .checkbox {
+            display:flex;
+            align-items:center;
+            gap:.5rem;
+            color:var(--muted);
+            font-size:.9rem;
+        }
+        .checkbox input[type="checkbox"] {
+            appearance:none;
+            width:18px;height:18px;
+            border:2px solid rgba(255,255,255,.2);
+            border-radius:6px;
+            background:rgba(255,255,255,.05);
+            cursor:pointer;position:relative;
+            transition:.3s;
+        }
+        .checkbox input[type="checkbox"]:checked{
+            background:linear-gradient(135deg,var(--primary),var(--secondary));
+            border:none;
+            box-shadow:0 0 6px rgba(0,211,167,.4);
+        }
+        .checkbox input[type="checkbox"]:checked::after{
+            content:"\f00c";
+            font-family:"Font Awesome 6 Free";
+            font-weight:900;
+            position:absolute;
+            top:50%;left:50%;
+            transform:translate(-50%,-55%);
+            color:#fff;font-size:.7rem;
+        }
+        .checkbox a {
+            color:var(--secondary);
+            text-decoration:none;
+            font-weight:600;
+        }
+        .checkbox a:hover{color:var(--primary);}
+
+        /* button */
+        button{
+            margin-top:.6rem;
+            background:linear-gradient(90deg,var(--primary),var(--secondary));
+            border:none;color:#fff;font-weight:600;
+            border-radius:var(--radius);padding:.9rem;
+            cursor:pointer;transition:.4s;
+        }
+        button:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(0,0,0,.25);}
+        p{color:var(--muted);font-size:.9rem;text-align:center;margin-top:1rem}
+        p a{color:var(--primary);text-decoration:none}
+
+        /* notification */
+        .notification{
+            position:fixed;top:2rem;right:2rem;
+            background:var(--secondary);color:#fff;
+            padding:.9rem 1.3rem;border-radius:var(--radius);
+            transform:translateX(120%);transition:.3s;
+        }
+        .notification.show{transform:translateX(0);}
+    </style>
+</head>
+
+<body>
+<div class="signup-card">
+    <div class="logo">
+        <div class="icon"><i class="fa-solid fa-paw"></i></div>
+        <h2>Join Happy Paws</h2>
+    </div>
+
+    <form id="signupForm">
+        <div class="form-group">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="name" placeholder="Full Name" required>
+        </div>
+
+        <div class="form-group">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="email" placeholder="Email Address" required>
+        </div>
+
+        <div class="form-group">
+            <i class="fa-solid fa-user-gear"></i>
+            <select id="role" required>
+                <option value="">Select Role</option>
+                <option value="PET_OWNER">Pet Owner</option>
+                <option value="VETERINARIAN">Veterinarian</option>
+                <option value="GROOMER">Groomer</option>
+                <option value="APPOINTMENT_MANAGER">Appointment Manager</option>
+                <option value="SHOP_KEEPER">Shop Keeper</option>
+                <option value="ADMIN">Admin</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="button" class="password-toggle" onclick="togglePass()">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+        </div>
+
+        <label class="checkbox">
+            <input type="checkbox" id="agree" required>
+            I agree to <a href="#">Terms & Privacy</a>
+        </label>
+
+        <button type="submit">Create Account</button>
+
+        <p>Already have an account? <a href="login.html">Login</a></p>
+    </form>
+</div>
+<script>
+    /* ========== PASSWORD TOGGLE ========== */
+    function togglePassword(fieldId) {
+        const input = document.getElementById(fieldId);
+        const icon = input.parentElement.querySelector(".password-toggle i");
+        const isHidden = input.type === "password";
+        input.type = isHidden ? "text" : "password";
+        icon.className = isHidden ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+    }
+
+    /* ========== EMAIL VALIDATION ========== */
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    /* ========== SHOW NOTIFICATION ========== */
+    function showNotification(msg, type = "success") {
+        document.querySelectorAll(".notification").forEach(n => n.remove());
+        const note = document.createElement("div");
+        note.className = `notification ${type}`;
+        note.innerHTML = `
+    <div class="notification-content" style="display:flex;align-items:center;gap:.5rem;">
+      <i class="fas fa-${type === "success" ? "check-circle" : "exclamation-circle"}"></i>
+      <span>${msg}</span>
+    </div>`;
+        document.body.appendChild(note);
+        setTimeout(() => note.classList.add("show"), 100);
+        setTimeout(() => {
+            note.classList.remove("show");
+            setTimeout(() => note.remove(), 300);
+        }, 4000);
+    }
+
+    /* ========== FORM HANDLER ========== */
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Collect values
+        const fullName = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const role = document.getElementById("role").value;
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirmPassword") ?
+            document.getElementById("confirmPassword").value : password;
+        const agree = document.getElementById("agree").checked;
+        const btn = e.target.querySelector("button[type='submit']");
+
+        // Validation
+        if (!fullName || !email || !role || !password) {
+            showNotification("Please fill all required fields", "error");
+            return;
+        }
+        if (!isValidEmail(email)) {
+            showNotification("Invalid email format", "error");
+            return;
+        }
+        if (password.length < 6) {
+            showNotification("Password must be at least 6 characters", "error");
+            return;
+        }
+        if (password !== confirmPassword) {
+            showNotification("Passwords do not match", "error");
+            return;
+        }
+        if (!agree) {
+            showNotification("Please agree to the Terms & Privacy", "error");
+            return;
+        }
+
+        // Build payload
+        const payload = {
+            username: fullName.replace(/\s+/g, "_").toLowerCase(),
+            email: email,
+            password: password,
+            role: role
+        };
+
+        // UI loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+
+        try {
+            // Backend call
+            const res = await fetch("http://localhost:8080/api/v1/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const text = await res.text();
+            if (!res.ok) throw new Error(text);
+
+            let userData;
+            try {
+                userData = JSON.parse(text);
+            } catch {
+                userData = {};
+            }
+
+            showNotification("Account created successfully!", "success");
+
+            // Save session
+            localStorage.setItem("currentUser", JSON.stringify(userData));
+            localStorage.setItem("userRole", userData.role || role);
+            localStorage.setItem("userEmail", userData.email || email);
+
+            // Redirect by role
+            setTimeout(() => {
+                switch (role) {
+                    case "PET_OWNER":
+                        window.location.href = "dashboard.html";
+                        break;
+                    case "SHOP_KEEPER":
+                        window.location.href = "shopkeeper-dashboard.html";
+                        break;
+                    case "VETERINARIAN":
+                        window.location.href = "medical-recod.html";
+                        break;
+                    case "APPOINTMENT_MANAGER":
+                        window.location.href = "appointment-dashboard.html";
+                        break;
+                    case "ADMIN":
+                        window.location.href = "admin-dashboard.html";
+                        break;
+                    case "GROOMER":
+                        window.location.href = "groomer-dashboard.html";
+                        break;
+                    default:
+                        window.location.href = "dashboard.html";
+                }
+            }, 2000);
+        } catch (err) {
+            console.error("Signup Error:", err);
+            showNotification(err.message || "Registration failed", "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+        }
+    });
+
+    /* ========== PASSWORD STRENGTH METER ========== */
+    document.getElementById("password").addEventListener("input", function () {
+        const bar = document.getElementById("strengthBar");
+        const text = document.getElementById("strengthText");
+        if (!bar || !text) return;
+        const pass = this.value;
+        let score = 0;
+        if (pass.length >= 8) score++;
+        if (/[a-z]/.test(pass)) score++;
+        if (/[A-Z]/.test(pass)) score++;
+        if (/[0-9]/.test(pass)) score++;
+        if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+        bar.style.transition = "width .3s";
+        if (score <= 2) {
+            bar.style.width = "30%";
+            bar.style.background = "#f87171";
+            text.textContent = "Weak password";
+        } else if (score <= 4) {
+            bar.style.width = "70%";
+            bar.style.background = "#facc15";
+            text.textContent = "Medium strength";
+        } else {
+            bar.style.width = "100%";
+            bar.style.background = "#10b981";
+            text.textContent = "Strong password!";
+        }
+    });
+
+    console.log("✅ Happy Paws Signup JS Ready");
+</script>
+
+</body>
+</html>

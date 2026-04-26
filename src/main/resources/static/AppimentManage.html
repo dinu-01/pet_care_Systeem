@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Happy Paws • Appointment Management</title>
+
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+    <style>
+        :root{
+            /* Light theme */
+            --bg:#f3f6fb;
+            --panel:#ffffff;
+            --text:#0f172a;
+            --muted:#6b7280;
+            --border:rgba(15,23,42,.1);
+            --primary:#6d5dfc;
+            --secondary:#22c55e;
+            --success:#10b981; --warning:#f59e0b;
+            --error:#ef4444;
+            --card-shadow:0 12px 32px rgba(2,6,23,.08);
+            --radius:16px;
+            --radius-sm:12px; --dur:360ms;
+            --easing:cubic-bezier(.2,.8,.2,1);
+            --glass:rgba(255,255,255,.6);
+        }
+        [data-theme="dark"]{
+            --bg:#0b1020;
+            --panel:#111831;
+            --text:#e8ecf3;
+            --muted:#9aa3b2;
+            --border:rgba(255,255,255,.08);
+            --primary:#7c5cff;
+            --secondary:#22c55e;
+            --card-shadow:0 12px 36px rgba(0,0,0,.35);
+            --glass:rgba(17,24,49,.6);
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{
+            font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            color:var(--text);
+            background:
+                    radial-gradient(1200px 600px at -10% -10%, rgba(124, 92, 255, 0.14), transparent 40%),
+                    radial-gradient(1000px 700px at 110% 20%, rgba(34, 197, 94, 0.14), transparent 35%),
+                    var(--bg);
+            line-height:1.35;
+        }
+        /* ===== Background Video ===== */
+        #bgVideo {
+            position:fixed;top:0;left:0;width:100%;height:100%;
+            object-fit:cover;z-index:-1;
+            opacity:.35;filter:brightness(.85);
+            transition:opacity .8s ease;
+        }
+        [data-theme="dark"] #bgVideo{opacity:.25;filter:brightness(.6)}
+
+        /* ====== Layout ====== */
+        .dashboard-container{display:grid; grid-template-columns:280px 1fr; min-height:100vh}
+
+        /* ====== Sidebar ====== */
+        .sidebar{
+            position:sticky;
+            top:0;
+            height:100vh;
+            background:
+                    linear-gradient(180deg, rgba(124,92,255,.18), rgba(34,197,94,.18)),
+                    linear-gradient(160deg, var(--primary), var(--secondary));
+            color:#fff;
+            padding:24px 18px;
+            display:flex; flex-direction:column;
+            gap:22px;
+        }
+        .brand{display:flex;
+            align-items:center;
+            gap:12px;
+            padding:10px 12px;
+            border-radius:14px;
+            background:rgba(255,255,255,.14);
+            backdrop-filter:blur(6px);
+            box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+            animation:pop-in var(--dur) var(--easing) both}
+        .brand i{font-size:22px}
+        .brand h2{font-size:18px;
+            font-weight:800;letter-spacing:.2px}
+        .sidebar small{opacity:.95
+        }
+        .sidebar-menu{
+            list-style:none;
+            display:grid;
+            gap:6px;margin-top:8px}
+        .sidebar-menu a{
+            color:#fff;
+            text-decoration:none;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:12px 14px;
+            border-radius:12px;
+            transition:transform .22s var(--easing), background .22s var(--easing)
+        }
+        .sidebar-menu a i{
+            width:22px;
+            text-align:center;
+            opacity:.95
+        }
+        .sidebar-menu a:hover{transform:translateX(4px);background:rgba(255,255,255,.16)
+        }
+        .sidebar-menu a.active{
+            background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)
+        }
+
+        .sidebar-footer{
+            margin-top:auto;display:grid;gap:10px
+        }
+        .btn{
+            border:none;
+            border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer;transition:transform .22s var(--easing)
+        }
+        .btn:hover{
+            transform:translateY(-2px)
+        }
+        .btn-primary{
+            background:linear-gradient(135deg, var(--primary), #a855f7); color:#fff
+        }
+        .btn-warning{
+            background:linear-gradient(135deg, #f59e0b, #fbbf24); color:#fff
+        }
+        .btn-error{
+            background:linear-gradient(135deg, #ef4444, #f97316); color:#fff
+        }
+        .btn-ghost{
+            background:#fff; color:#111
+        }
+        .collapse-toggle{
+            position:absolute; top:16px; right:-14px; width:36px; height:36px; display:grid; place-items:center;
+            background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:50%;
+            box-shadow:var(--card-shadow); cursor:pointer; z-index:3;
+        }
+
+        /* ====== Main ====== */
+        .main-content{
+            padding:26px min(4vw,36px);
+            display:grid;
+            gap:22px;
+            animation:fade-in var(--dur) var(--easing)}
+
+        .header
+        {display:flex;justify-content:space-between;
+            align-items:center}
+
+        .title h1{
+            font-size:clamp(20px,2.4vw,28px);
+            font-weight:800;
+            letter-spacing:.2px}
+
+        .user-avatar{
+            width:46px;height:46px;
+            border-radius:50%;display:grid;
+            place-items:center;
+            background:linear-gradient(140deg, var(--primary), var(--secondary));
+            color:#fff;
+            font-weight:800;
+            letter-spacing:.5px}
+
+        /* ====== Tabs ====== */
+        .tabs{display:flex;gap:8px;border-bottom:1px dashed var(--border)}
+        .tab{
+            border:none;
+            background:transparent;
+            padding:12px 16px;cursor:pointer;
+            font-weight:700;
+            color:var(--muted);
+            border-bottom:3px solid transparent;
+            transition:border-color var(--dur) var(--easing), color var(--dur) var(--easing)
+        }
+        .tab.active{
+            color:var(--primary);
+            border-bottom-color:var(--primary)
+        }
+        .tab-content{
+            display:none;
+            animation:fade-in var(--dur) var(--easing)
+        }
+        .tab-content.active{
+            display:block
+        }
+
+        /* ====== Card ====== */
+        .card{
+            background:var(--panel);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--card-shadow);
+            padding:20px;
+            position:relative;
+            overflow:hidden;
+        }
+        .card:before{
+            content:"";
+            position:absolute;
+            inset:-2px;
+            background:radial-gradient(600px 220px at -10% -10%, rgba(124,92,255,.14), transparent 40%);
+            pointer-events:none;
+        }
+
+        .form-group{
+            margin-bottom:14px
+        }
+        .form-control{
+            width:100%;
+            padding:12px 12px;
+            border:1.8px solid var(--border);
+            border-radius:10px;
+            background:transparent;
+            color:var(--text);
+
+            transition:border-color var(--dur) var(--easing), transform var(--dur) var(--easing)
+        }
+        .form-control:focus{
+            outline:none;
+            border-color:var(--primary);
+            transform:translateY(-1px)
+        }
+
+        .slot-grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap:12px;
+            margin-top:8px}
+        .slot-card{
+            padding:12px;
+            border:1.8px dashed var(--border);
+            border-radius:10px;
+            text-align:center; cursor:pointer;
+            transition:transform .22s var(--easing), border-color .22s var(--easing), background .22s var(--easing), color .22s var(--easing);
+            background:linear-gradient(180deg, var(--glass), transparent);
+        }
+        .slot-card:hover{
+            transform:translateY(-2px); border-color:var(--primary)
+        }
+        .slot-card.selected{
+            background:linear-gradient(135deg, var(--primary), #4f46e5); color:#fff;
+            border-color:transparent
+        }
+
+        .no-pets-message{
+            background:rgba(245, 158, 11, .14);
+            border:1px dashed #f59e0b;
+            border-radius:12px;
+            padding:12px;
+            text-align:center;
+            color:#b45309;
+            margin-bottom:12px
+        }
+
+        /* Appointment item */
+        .apt-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:start;margin-bottom:.5rem
+        }
+        .apt-status{
+            padding:.25rem .75rem;
+            border-radius:20px;
+            color:#fff;
+            font-size:.85rem
+        }
+
+        /* Toasts */
+        .notification{
+            position:fixed;
+            top:22px;
+            right:22px;
+            z-index:1100;
+            color:#fff;
+            padding:12px 14px;
+            border-radius:12px;
+            display:grid;
+            grid-auto-flow:column;
+            gap:10px;
+            box-shadow:var(--card-shadow); transform:translateX(40px); opacity:0; animation:toast-in var(--dur) var(--easing) forwards;
+        }
+        .notification.success{background:linear-gradient(135deg, var(--success), #22c55e)}
+        .notification.error{background:linear-gradient(135deg, var(--error), #f97316)}
+        .notification.warning{background:linear-gradient(135deg, var(--warning), #f59e0b)}
+
+        .hidden{display:none}
+
+        /* Responsive */
+        @media (max-width:1020px){
+            .dashboard-container{grid-template-columns:84px 1fr}
+            .sidebar .label{display:none}
+            .brand h2, .sidebar small{display:none}
+        }
+        @media (max-width:720px){
+            .dashboard-container{grid-template-columns:1fr}
+            .sidebar{position:fixed; left:0; top:0; bottom:0; width:260px; transform:translateX(-100%); transition:transform var(--dur) var(--easing); z-index:1001}
+            .sidebar.open{transform:translateX(0)}
+            .collapse-toggle{top:16px; left:16px; right:auto}
+            .main-content{padding-top:70px}
+        }
+        /* 🌙 Dark mode fix for <select> dropdown */
+        [data-theme="dark"] select.form-control {
+            background-color: #1e253f !important;
+            color: #e8ecf3 !important;
+            border-color: #7c5cff !important;
+        }
+
+        [data-theme="dark"] select.form-control option {
+            background-color: #1e253f !important;
+            color: #e8ecf3 !important;
+        }
+
+
+        /* Animations */
+        @keyframes fade-in{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)}}
+        @keyframes pop-in{from{transform:scale(.96); opacity:0} to{transform:scale(1); opacity:1}}
+        @keyframes toast-in{from{transform:translateX(40px); opacity:0} to{transform:translateX(0); opacity:1}}
+    </style>
+</head>
+
+<body>
+
+<!-- Background video -->
+<video autoplay muted loop playsinline id="bgVideo">
+    <source src="videos/petcare1.mp4" type="video/mp4">
+</video>
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <button class="collapse-toggle" id="toggleSidebar" title="Menu"><i class="fa-solid fa-bars"></i></button>
+        <div class="brand"><i class="fa-solid fa-paw"></i><h2>Happy Paws</h2></div>
+        <small>Pet Owner Dashboard</small>
+
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="fas fa-home"></i> <span class="label">Dashboard</span></a></li>
+            <li><a href="pet.html"><i class="fas fa-paw"></i> <span class="label">My Pets</span></a></li>
+            <li><a href="AppimentManage.html" class="active"><i class="fas fa-calendar-check"></i> <span class="label">Appointments</span></a></li>
+            <li><a href="product.html"><i class="fas fa-shopping-cart"></i> <span class="label">Pet Shop</span></a></li>
+            <li><a href="owner_medical_reports.html"><i class="fas fa-history"></i> <span class="label">Medical Report</span></a></li>
+            <li><a href="owner_grooming_reports.html"><i class="fas fa-scissors"></i> <span class="label">Grooming Records</span></a></li>
+            <li><a href="#"><i class="fas fa-cog"></i> <span class="label">Settings</span></a></li>
+            <li><a href="index.html"><i class="fas fa-sign-out-alt"></i> <span class="label">Logout</span></a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <button class="btn btn-ghost" id="themeToggle"><i class="fa-solid fa-moon"></i> <span class="label">Toggle Theme</span></button>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="main-content">
+        <div class="header">
+            <div class="title"><h1>Appointment Management</h1></div>
+            <div class="user-avatar" id="userAvatar">PO</div>
+        </div>
+
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('book-appointment', event)">Book Appointment</button>
+            <button class="tab" onclick="switchTab('my-appointments', event)">My Appointments</button>
+        </div>
+
+        <!-- Book Appointment -->
+        <section id="book-appointment" class="tab-content active">
+            <div class="card">
+                <h2 style="margin-bottom:10px;">Book New Appointment</h2>
+                <p style="color:var(--muted); margin-bottom:12px;">Choose your pet, service and a convenient time slot.</p>
+
+                <div id="noPetsMessage" class="no-pets-message hidden">
+                    <i class="fas fa-exclamation-triangle"></i> No pets found! Please add pets first.
+                </div>
+
+                <form id="appointmentForm">
+                    <div class="form-group">
+                        <label>Select Pet *</label>
+                        <select class="form-control" id="petSelect" required></select>
+                        <div id="petSelectError" class="hidden" style="color:var(--error); font-size:.875rem; margin-top:4px;">Select a pet</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Service Type *</label>
+                        <select class="form-control" id="serviceType" required>
+                            <option value="">Select</option>
+                            <option value="GROOMING">Grooming</option>
+                            <option value="VETERINARY_CARE">Veterinary Care</option>
+                            <option value="VACCINATION">Vaccination</option>
+                        </select>
+                        <div id="serviceTypeError" class="hidden" style="color:var(--error); font-size:.875rem; margin-top:4px;">Select service type</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Appointment Date *</label>
+                        <input type="date" class="form-control" id="appointmentDate" required />
+                        <div id="dateError" class="hidden" style="color:var(--error); font-size:.875rem; margin-top:4px;">Select a date</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Available Time Slots *</label>
+                        <div id="timeSlots" class="slot-grid"></div>
+                        <div id="noSlotsMessage" class="hidden" style="color:var(--error); font-size:.875rem; margin-top:4px;">No available slots for this date</div>
+                        <div id="timeSlotError" class="hidden" style="color:var(--error); font-size:.875rem; margin-top:4px;">Select a time slot</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Book Appointment</button>
+                    <div id="successMessage" class="hidden" style="color:var(--success); font-size:.9rem; margin-top:.5rem;">Appointment booked successfully!</div>
+                </form>
+            </div>
+        </section>
+
+        <!-- My Appointments -->
+        <section id="my-appointments" class="tab-content">
+            <div class="card">
+                <h2 style="margin-bottom:10px;">My Appointments</h2>
+                <div id="appointmentList"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    /* =====================================================
+       CONFIGURATION (unchanged)
+    ===================================================== */
+    const BASE_URL = "http://localhost:8080/api/v1/appointment";
+    const PET_URL  = "http://localhost:8080/api/v1/pets";
+
+    let currentOwnerId = null;
+    let selectedTimeSlot = null;
+    let currentAppointments = [];
+
+    /* =========================
+       THEME + SIDEBAR (UI only)
+    ========================= */
+    function setTheme(theme){
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('hp_theme', theme);
+    }
+    document.addEventListener('click', (e)=>{
+        const sb = document.getElementById('sidebar');
+        if (window.innerWidth <= 720 && !sb.contains(e.target) && !e.target.closest('#toggleSidebar')){
+            sb.classList.remove('open');
+        }
+    });
+
+    /* =====================================================
+       INITIALIZATION (keep logic)
+    ===================================================== */
+    document.addEventListener("DOMContentLoaded", async function () {
+        // Theme init
+        const saved = localStorage.getItem('hp_theme') || 'dark';
+        setTheme(saved);
+        document.getElementById('themeToggle')?.addEventListener('click', ()=>{
+            const cur = document.documentElement.getAttribute('data-theme');
+            setTheme(cur==='dark'?'light':'dark');
+            showNotification(`Switched to ${cur==='dark'?'Light':'Dark'} mode`, 'success');
+        });
+
+        // Sidebar toggle
+        document.getElementById('toggleSidebar')?.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // User
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser) {
+            alert("Please log in to access appointments");
+            window.location.href = "login.html";
+            return;
+        }
+        currentOwnerId = currentUser.id;
+        const avatar = document.getElementById('userAvatar');
+        avatar.textContent = `${(currentUser.firstName?.[0]||'P').toUpperCase()}${(currentUser.lastName?.[0]||'O').toUpperCase()}`;
+
+        // Form listeners
+        document.getElementById("appointmentDate").addEventListener("change", loadTimeSlots);
+        document.getElementById("serviceType").addEventListener("change", loadTimeSlots);
+        document.getElementById("appointmentForm").addEventListener("submit", createAppointment);
+
+        // Load base data
+        await loadPetsForAppointment();
+        await loadAppointments();
+        setMinDate();
+    });
+
+    /* =====================================================
+       CREATE Appointment (unchanged)
+    ===================================================== */
+    async function createAppointment(e) {
+        e.preventDefault();
+
+        const petId = document.getElementById("petSelect").value;
+        const serviceType = document.getElementById("serviceType").value;
+        const date = document.getElementById("appointmentDate").value;
+
+        if (!petId || !serviceType || !date || !selectedTimeSlot) {
+            showNotification("⚠️ Please fill all fields and select a time slot", "warning");
+            return;
+        }
+
+        const payload = {
+            appointment: {
+                serviceType: serviceType,
+                appointmentDateTime: `${date}T${convertTo24(selectedTimeSlot)}`,
+                description: `${serviceType} appointment`
+            },
+            petId: parseInt(petId),
+            ownerId: currentOwnerId,
+            serviceProviderId: null
+        };
+
+        try {
+            const res = await fetch(`${BASE_URL}/create`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+            showNotification("✅ Appointment booked successfully!", "success");
+
+            document.getElementById("appointmentForm").reset();
+            document.getElementById("timeSlots").innerHTML = "";
+            selectedTimeSlot = null;
+
+            await loadAppointments();
+            switchTab("my-appointments");
+        } catch (err) {
+            console.error(err);
+            showNotification(" Failed to create appointment: " + err.message, "error");
+        }
+    }
+
+    /* =====================================================
+       READ / LOAD Appointments (unchanged)
+    ===================================================== */
+    async function loadAppointments() {
+        const container = document.getElementById("appointmentList");
+        container.innerHTML = "";
+
+        try {
+            const res = await fetch(`${BASE_URL}/owner/${currentOwnerId}`);
+            if (res.status === 204) {
+                container.innerHTML = `
+          <div style="text-align:center; padding:2rem; color:var(--muted); border:1px dashed var(--border); border-radius:12px;">
+            <i class="fas fa-calendar-times" style="font-size:3rem; color:var(--primary);"></i>
+            <h3 style="margin-top:.5rem;">No Appointments</h3>
+            <p>You haven’t booked any appointments yet.</p>
+          </div>`;
+                return;
+            }
+
+            if (!res.ok) throw new Error("Failed to fetch appointments");
+            const data = await res.json();
+            currentAppointments = data;
+
+            data.sort((a, b) => new Date(a.appointmentDateTime) - new Date(b.appointmentDateTime));
+
+            data.forEach((apt) => {
+                const div = document.createElement("div");
+                div.className = "card";
+                div.innerHTML = `
+          <div class="apt-header">
+            <div>
+              <strong>${apt.serviceType.replace("_", " ")}</strong><br>
+              <small style="color:var(--muted)">${formatDate(apt.appointmentDateTime)}</small>
+            </div>
+            <span class="apt-status" style="background:${getStatusColor(apt.status)};">${apt.status}</span>
+          </div>
+          <div style="font-size:0.9rem;color:var(--muted);">
+            <i class="fas fa-paw"></i> ${apt.petName || "Pet"} &nbsp;|&nbsp;
+            <i class="fas fa-user-md"></i> ${apt.serviceProviderName || "Dr. Smith"}
+          </div>
+          <div style="margin-top:0.75rem;display:flex;gap:10px;">
+            <button class="btn btn-warning" onclick="openEdit(${apt.id})"><i class="fas fa-edit"></i> Edit</button>
+            <button class="btn btn-error" onclick="deleteAppointment(${apt.id})"><i class="fas fa-trash"></i> Delete</button>
+          </div>`;
+                container.appendChild(div);
+            });
+        } catch (err) {
+            console.error(err);
+            showNotification(" " + err.message, "error");
+        }
+    }
+
+
+    async function openEdit(id) {
+        const apt = currentAppointments.find(a => a.id === id);
+        if (!apt) return showNotification("Appointment not found", "error");
+
+        const container = document.getElementById("appointmentList");
+        container.innerHTML = `
+      <div class="card" style="max-width:560px;margin:auto;">
+        <h3 style="margin-bottom:1rem;text-align:center;">✏️ Edit Appointment</h3>
+        <div class="form-group">
+          <label for="editPet">Select Pet</label>
+          <select id="editPet" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label for="editService">Service Type</label>
+          <select id="editService" class="form-control">
+            <option value="GROOMING" ${apt.serviceType === "GROOMING" ? "selected" : ""}>Grooming</option>
+            <option value="VETERINARY_CARE" ${apt.serviceType === "VETERINARY_CARE" ? "selected" : ""}>Veterinary Care</option>
+            <option value="VACCINATION" ${apt.serviceType === "VACCINATION" ? "selected" : ""}>Vaccination</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="editDate">Appointment Date</label>
+          <input type="date" id="editDate" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Available Time Slots</label>
+          <div id="editTimeSlots" class="slot-grid"></div>
+        </div>
+        <div class="form-group">
+          <label for="editDesc">Description</label>
+          <textarea id="editDesc" class="form-control" rows="2">${apt.description || ""}</textarea>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button class="btn btn-primary" onclick="saveEdit(${apt.id})">💾 Save</button>
+          <button class="btn btn-error" onclick="loadAppointments()">Cancel</button>
+        </div>
+      </div>`;
+
+        await loadPetsForEdit(apt.petId);
+        const dateField = document.getElementById("editDate");
+        const aptDate = apt.appointmentDateTime.split("T")[0];
+        dateField.value = aptDate;
+        setMinEditDate();
+        loadEditTimeSlots(aptDate, apt.appointmentDateTime);
+        dateField.addEventListener("change", () => loadEditTimeSlots(dateField.value));
+    }
+
+    async function loadPetsForEdit(selectedPetId) {
+        const select = document.getElementById("editPet");
+        select.innerHTML = '<option value="">Select Pet</option>';
+        try {
+            const res = await fetch(`${PET_URL}/owner/${currentOwnerId}`);
+            const pets = await res.json();
+            pets.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id;
+                opt.textContent = `${p.name} (${p.species || p.type})`;
+                if (p.id === selectedPetId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        } catch {
+            showNotification("⚠️ Error loading pets", "warning");
+        }
+    }
+
+    /* =====================================================
+       TIME SLOT HANDLING (unchanged logic, polished UI)
+    ===================================================== */
+    async function loadTimeSlots() {
+        const date = document.getElementById("appointmentDate").value;
+        const service = document.getElementById("serviceType").value;
+        const container = document.getElementById("timeSlots");
+        const noSlotMsg = document.getElementById("noSlotsMessage");
+        container.innerHTML = "";
+        selectedTimeSlot = null;
+
+        if (!date || !service) return;
+
+        try {
+            const res = await fetch(`${BASE_URL}/available-slots?date=${date}&serviceType=${service}`);
+            let slots = [];
+
+            if (res.ok && res.status !== 204) {
+                const data = await res.json();
+                if (Array.isArray(data)) slots = data.map(s => formatTimeSlot(s));
+                else if (data.slots && Array.isArray(data.slots)) slots = data.slots.map(s => formatTimeSlot(s));
+                else if (data.startTime) slots = [formatTimeSlot(data.startTime)];
+            }
+
+            if (!slots || slots.length === 0) {
+                slots = generateAllSlots();
+            }
+
+            if (slots.length === 0) {
+                noSlotMsg.classList.remove("hidden");
+                return;
+            } else {
+                noSlotMsg.classList.add("hidden");
+            }
+
+            slots.forEach(slot => {
+                const div = document.createElement("div");
+                div.className = "slot-card";
+                div.textContent = slot;
+                div.onclick = () => {
+                    document.querySelectorAll(".slot-card").forEach(s => s.classList.remove("selected"));
+                    div.classList.add("selected");
+                    selectedTimeSlot = slot;
+                };
+                container.appendChild(div);
+            });
+        } catch (err) {
+            console.error("⚠️ Error loading slots:", err);
+            const slots = generateAllSlots();
+            if (slots.length > 0) {
+                noSlotMsg.classList.add("hidden");
+                slots.forEach(slot => {
+                    const div = document.createElement("div");
+                    div.className = "slot-card";
+                    div.textContent = slot;
+                    div.onclick = () => {
+                        document.querySelectorAll(".slot-card").forEach(s => s.classList.remove("selected"));
+                        div.classList.add("selected");
+                        selectedTimeSlot = slot;
+                    };
+                    container.appendChild(div);
+                });
+            } else {
+                noSlotMsg.classList.remove("hidden");
+            }
+        }
+    }
+
+    function generateAllSlots() {
+        const slots = [];
+        let start = new Date(); start.setHours(9, 0, 0, 0);
+        const end = new Date(); end.setHours(19, 0, 0, 0);
+        while (start < end) {
+            let h = start.getHours();
+            let m = start.getMinutes();
+            const ampm = h >= 12 ? "PM" : "AM";
+            h = h % 12 || 12;
+            slots.push(`${h}:${m.toString().padStart(2, "0")} ${ampm}`);
+            start.setMinutes(start.getMinutes() + 30);
+        }
+        return slots;
+    }
+
+    function formatTimeSlot(dateTime) {
+        if (typeof dateTime === 'string' && dateTime.includes(':')) {
+            if (dateTime.includes('AM') || dateTime.includes('PM')) return dateTime;
+            if (dateTime.includes('T')) {
+                const d = new Date(dateTime);
+                let hours = d.getHours();
+                let minutes = d.getMinutes().toString().padStart(2, "0");
+                const ampm = hours >= 12 ? "PM" : "AM";
+                hours = hours % 12 || 12;
+                return `${hours}:${minutes} ${ampm}`;
+            }
+            const [hours, minutes] = dateTime.split(':');
+            const hourNum = parseInt(hours);
+            const ampm = hourNum >= 12 ? "PM" : "AM";
+            const hour12 = hourNum % 12 || 12;
+            return `${hour12}:${minutes} ${ampm}`;
+        }
+        return dateTime;
+    }
+
+    async function loadEditTimeSlots(date, currentDateTime) {
+        const service = document.getElementById("editService").value;
+        const container = document.getElementById("editTimeSlots");
+        container.innerHTML = "";
+        window.selectedEditSlot = null;
+
+        if (!date || !service) return;
+
+        try {
+            const res = await fetch(`${BASE_URL}/available-slots?date=${date}&serviceType=${service}`);
+            let slots = [];
+
+            if (res.ok && res.status !== 204) {
+                const data = await res.json();
+                if (Array.isArray(data)) slots = data.map(s => formatTimeSlot(s));
+                else if (data.slots && Array.isArray(data.slots)) slots = data.slots.map(s => formatTimeSlot(s));
+                else if (data.startTime) slots = [formatTimeSlot(data.startTime)];
+            }
+
+            if (!slots || slots.length === 0) slots = generateAllSlots();
+
+            slots.forEach(slot => {
+                const div = document.createElement("div");
+                div.className = "slot-card";
+                div.textContent = slot;
+
+                if (matchSlot(currentDateTime, slot)) {
+                    div.classList.add("selected");
+                    window.selectedEditSlot = slot;
+                }
+                div.onclick = () => {
+                    document.querySelectorAll("#editTimeSlots .slot-card").forEach(s => s.classList.remove("selected"));
+                    div.classList.add("selected");
+                    window.selectedEditSlot = slot;
+                };
+                container.appendChild(div);
+            });
+        } catch (err) {
+            console.error("Error loading edit slots:", err);
+            const slots = generateAllSlots();
+            slots.forEach(slot => {
+                const div = document.createElement("div");
+                div.className = "slot-card";
+                div.textContent = slot;
+
+                if (matchSlot(currentDateTime, slot)) {
+                    div.classList.add("selected");
+                    window.selectedEditSlot = slot;
+                }
+                div.onclick = () => {
+                    document.querySelectorAll("#editTimeSlots .slot-card").forEach(s => s.classList.remove("selected"));
+                    div.classList.add("selected");
+                    window.selectedEditSlot = slot;
+                };
+                container.appendChild(div);
+            });
+        }
+    }
+
+    function matchSlot(dateTimeStr, slot) {
+        const dateObj = new Date(dateTimeStr);
+        let hours = dateObj.getHours();
+        let minutes = dateObj.getMinutes();
+        const ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        const formatted = `${hours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+        return formatted === slot;
+    }
+
+    function convertTo24(time12h) {
+        const [time, modifier] = time12h.split(" ");
+        let [hours, minutes] = time.split(":");
+        if (hours === "12") hours = "00";
+        if (modifier === "PM") hours = parseInt(hours, 10) + 12;
+        return `${hours.toString().padStart(2, "0")}:${minutes}:00`;
+    }
+
+    async function saveEdit(id) {
+        const petId = document.getElementById("editPet").value;
+        const serviceType = document.getElementById("editService").value;
+        const date = document.getElementById("editDate").value;
+        const desc = document.getElementById("editDesc").value;
+        const slot = window.selectedEditSlot;
+
+        if (!petId || !serviceType || !date || !slot) {
+            showNotification("⚠️ Please fill all fields", "warning");
+            return;
+        }
+
+        const payload = {
+            serviceType,
+            appointmentDateTime: `${date}T${convertTo24(slot)}`,
+            description: desc,
+            pet: { id: parseInt(petId) },
+            owner: { id: currentOwnerId }   // ✅ kept as you had
+        };
+
+        try {
+            const res = await fetch(`${BASE_URL}/update/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error(await res.text());
+            showNotification("✅ Appointment updated successfully!", "success");
+            await loadAppointments();
+        } catch (err) {
+            console.error(err);
+            showNotification("❌ Failed: " + err.message, "error");
+        }
+    }
+
+    /* =====================================================
+       DELETE Appointment (unchanged)
+    ===================================================== */
+    async function deleteAppointment(id) {
+        if (!confirm("Are you sure you want to delete this appointment?")) return;
+        try {
+            const res = await fetch(`${BASE_URL}/delete/${id}`, { method: "DELETE" });
+            if (!res.ok) throw new Error("Failed to delete appointment");
+            showNotification("🗑️ Appointment deleted successfully!", "success");
+            await loadAppointments();
+        } catch (err) {
+            showNotification("❌ " + err.message, "error");
+        }
+    }
+
+    /* =====================================================
+       LOAD PETS + UTILITIES (unchanged)
+    ===================================================== */
+    async function loadPetsForAppointment() {
+        const petSelect = document.getElementById("petSelect");
+        petSelect.innerHTML = '<option value="">Select Pet</option>';
+        try {
+            const res = await fetch(`${PET_URL}/owner/${currentOwnerId}`);
+            if (!res.ok) return;
+            const pets = await res.json();
+            if (!pets || pets.length === 0) {
+                document.getElementById("noPetsMessage").classList.remove("hidden");
+            } else {
+                document.getElementById("noPetsMessage").classList.add("hidden");
+            }
+            pets.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id;
+                opt.textContent = `${p.name} (${p.species || p.type})`;
+                petSelect.appendChild(opt);
+            });
+        } catch {}
+    }
+
+    function setMinDate() {
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("appointmentDate").setAttribute("min", today);
+    }
+    function setMinEditDate() {
+        const today = new Date().toISOString().split("T")[0];
+        const edit = document.getElementById("editDate");
+        if (edit) edit.setAttribute("min", today);
+    }
+
+    function switchTab(tabName, evt) {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        if (evt && evt.target) evt.target.classList.add("active");
+        document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+        document.getElementById(tabName).classList.add("active");
+        if (tabName === "my-appointments") loadAppointments();
+    }
+
+    function getStatusColor(status) {
+        const colors = {
+            PENDING:   "#f59e0b",
+            SCHEDULED: "#3b82f6",
+            CONFIRMED: "#10b981",
+            CANCELLED: "#ef4444",
+            COMPLETED: "#6b7280"
+        };
+        return colors[status] || "#6b7280";
+    }
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "numeric", hour12: true });
+    }
+
+    /* =====================================================
+       NOTIFICATIONS (UI only)
+    ===================================================== */
+    function showNotification(msg, type = "success") {
+        document.querySelectorAll(".notification").forEach(n => n.remove());
+        const div = document.createElement("div");
+        div.className = `notification ${type}`;
+        div.innerHTML = `<i class="fas fa-${type === "success" ? "check-circle" : type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'}"></i><span>${msg}</span>`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 4200);
+    }
+</script>
+
+</body>
+</html>

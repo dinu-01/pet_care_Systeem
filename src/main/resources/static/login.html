@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – Happy Paws</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --primary:#7c5cff;
+            --secondary:#00d3a7;
+            --bg:#0b1020;
+            --card:#121935;
+            --text:#e8ecf3;
+            --muted:#9aa3b2;
+            --radius:16px;
+            --shadow:0 10px 30px rgba(0,0,0,.3);
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{
+            font-family:'Inter',sans-serif;
+            background:linear-gradient(135deg,#0b1020,#1a1f3a);
+            display:flex;align-items:center;justify-content:center;
+            min-height:100vh;
+        }
+        .login-card{
+            width:370px;
+            background:rgba(18,25,53,.95);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:2.3rem;
+            color:var(--text);
+            animation:fadeUp .7s ease;
+        }
+        @keyframes fadeUp{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+        .logo{
+            display:flex;flex-direction:column;align-items:center;margin-bottom:1.7rem;
+        }
+        .logo .icon{
+            width:70px;height:70px;border-radius:50%;
+            background:linear-gradient(135deg,var(--primary),var(--secondary));
+            display:flex;align-items:center;justify-content:center;
+            color:white;font-size:2rem;
+            box-shadow:0 0 18px rgba(124,92,255,.4);
+            animation:pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+        .logo h2{margin-top:.8rem;font-weight:700;font-size:1.5rem;color:#fff}
+        form{display:flex;flex-direction:column;gap:1rem}
+        .form-group{position:relative}
+        .form-group i{
+            position:absolute;left:1rem;top:50%;
+            transform:translateY(-50%);
+            color:var(--muted);
+        }
+        input{
+            width:100%;
+            padding:.9rem 1rem .9rem 2.8rem;
+            background:rgba(255,255,255,0.05);
+            border:1.5px solid rgba(255,255,255,.1);
+            border-radius:var(--radius);
+            color:var(--text);
+            font-size:.95rem;
+            transition:.3s;
+        }
+        input:focus{
+            border-color:var(--secondary);
+            box-shadow:0 0 0 2px rgba(0,211,167,.35);
+            background:rgba(255,255,255,.08);
+            color:var(--text);
+        }
+        .password-toggle{
+            position:absolute;
+            right:0.9rem;
+            top:50%;
+            transform:translateY(-50%);
+            background:none;
+            border:none;
+            color:var(--muted);
+            cursor:pointer;
+            font-size:1rem;
+            transition:color .3s ease,transform .2s ease;
+        }
+        .password-toggle:hover{color:var(--secondary);transform:translateY(-50%) scale(1.15);}
+        .password-toggle i{pointer-events:none;}
+        input[type="password"]{padding-right:2.8rem}
+
+        /* Remember me + forgot */
+        .options{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            margin-top:.5rem;
+            font-size:.85rem;
+        }
+        .options a{color:var(--secondary);text-decoration:none}
+        .options a:hover{color:var(--primary)}
+        .checkbox{
+            display:flex;align-items:center;gap:.45rem;color:var(--muted)
+        }
+        .checkbox input{
+            appearance:none;
+            width:18px;height:18px;
+            border:2px solid rgba(255,255,255,.2);
+            border-radius:5px;
+            background:rgba(255,255,255,.05);
+            cursor:pointer;position:relative;
+            transition:.3s;
+        }
+        .checkbox input:checked{
+            background:linear-gradient(135deg,var(--primary),var(--secondary));
+            border:none;
+            box-shadow:0 0 6px rgba(0,211,167,.4);
+        }
+        .checkbox input:checked::after{
+            content:"\f00c";
+            font-family:"Font Awesome 6 Free";
+            font-weight:900;
+            position:absolute;
+            top:50%;left:50%;
+            transform:translate(-50%,-55%);
+            color:#fff;font-size:.7rem;
+        }
+
+        button{
+            margin-top:1rem;
+            background:linear-gradient(90deg,var(--primary),var(--secondary));
+            border:none;color:#fff;font-weight:600;
+            border-radius:var(--radius);padding:.9rem;
+            cursor:pointer;transition:.4s;
+        }
+        button:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(0,0,0,.25);}
+        p{color:var(--muted);font-size:.9rem;text-align:center;margin-top:1rem}
+        p a{color:var(--primary);text-decoration:none}
+        .notification{
+            position:fixed;top:2rem;right:2rem;
+            background:var(--secondary);color:#fff;
+            padding:.9rem 1.3rem;border-radius:var(--radius);
+            transform:translateX(120%);transition:.3s;
+        }
+        .notification.show{transform:translateX(0)}
+        .notification.error{background:#ff5c7a;}
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="logo">
+        <div class="icon"><i class="fa-solid fa-paw"></i></div>
+        <h2>Welcome Back</h2>
+    </div>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="email" placeholder="Email Address" required>
+        </div>
+
+        <div class="form-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="button" class="password-toggle" onclick="togglePass()">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+        </div>
+
+        <div class="options">
+            <label class="checkbox">
+                <input type="checkbox" id="remember">
+                Remember me
+            </label>
+            <a href="#">Forgot password?</a>
+        </div>
+
+        <button type="submit">Login</button>
+
+        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+    </form>
+</div>
+
+<script>
+    // Password visibility toggle
+    function togglePass(){
+        const passwordField = document.getElementById('password');
+        const eyeIcon = document.querySelector('.password-toggle i');
+
+        if(passwordField.type === 'password'){
+            passwordField.type = 'text';
+            eyeIcon.className = 'fa-solid fa-eye-slash';
+        } else {
+            passwordField.type = 'password';
+            eyeIcon.className = 'fa-solid fa-eye';
+        }
+    }
+
+    // Notification helper function
+    function showNote(msg, type = 'success'){
+        // Remove existing notifications
+        const existingNotes = document.querySelectorAll('.notification');
+        existingNotes.forEach(note => note.remove());
+
+        // Create new notification
+        const note = document.createElement('div');
+        note.className = `notification ${type}`;
+        note.textContent = msg;
+
+        // Style for error notifications
+        if(type === 'error'){
+            note.style.background = '#ff5c7a';
+        }
+
+        document.body.appendChild(note);
+
+        // Show animation
+        setTimeout(() => note.classList.add('show'), 100);
+
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            note.classList.remove('show');
+            setTimeout(() => {
+                if(note.parentNode){
+                    note.remove();
+                }
+            }, 300);
+        }, 4000);
+    }
+
+    // Test backend connection
+    async function testBackendConnection() {
+        try {
+            showNote('Checking server connection...', 'success');
+
+            const res = await fetch('http://localhost:8080/api/v1/users/health', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (res.ok) {
+                const healthData = await res.json();
+                console.log('✅ Backend is reachable:', healthData);
+                return true;
+            } else {
+                console.log('❌ Backend returned error:', res.status);
+                showNote('Server is not responding properly', 'error');
+                return false;
+            }
+        } catch (error) {
+            console.log('❌ Cannot reach backend:', error.message);
+            showNote('Cannot connect to server. Please make sure backend is running.', 'error');
+            return false;
+        }
+    }
+
+    // Create test user if needed
+    async function createTestUser() {
+        try {
+            console.log('Creating test user...');
+            const res = await fetch('http://localhost:8080/api/v1/users/test-create', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if(res.ok) {
+                const user = await res.json();
+                console.log('✅ Test user created:', user);
+                return user;
+            }
+            return null;
+        } catch (error) {
+            console.log('Test user creation failed:', error);
+            return null;
+        }
+    }
+
+    // Main login function
+    async function handleLogin(email, password) {
+        try {
+            console.log('🔐 Attempting login with:', { email, password });
+
+            // Try flexible login endpoint first
+            const loginData = {
+                login: email,  // This can be email or username
+                password: password
+            };
+
+            console.log('Sending request to login-flexible endpoint');
+
+            const res = await fetch('http://localhost:8080/api/v1/users/login-flexible', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(loginData)
+            });
+
+            console.log('📨 Response status:', res.status);
+            console.log('📨 Response headers:', res.headers);
+
+            const responseText = await res.text();
+            console.log('📨 Raw response:', responseText);
+
+            let data;
+            try {
+                data = JSON.parse(responseText);
+                console.log('📨 Parsed response data:', data);
+            } catch (parseError) {
+                console.error('❌ JSON parse error:', parseError);
+                throw new Error('Invalid server response format');
+            }
+
+            if(!res.ok) {
+                // Handle different error responses
+                const errorMessage = data.message ||
+                    data.error ||
+                    (typeof data === 'string' ? data : 'Login failed');
+                console.error('❌ Server error response:', errorMessage);
+                throw new Error(errorMessage);
+            }
+
+            // Handle successful response
+            console.log('✅ Login successful!', data);
+
+            let userData;
+            if(data.user) {
+                // New response format with user object
+                userData = data.user;
+            } else if(data.id && data.email) {
+                // Direct user object response
+                userData = data;
+            } else {
+                throw new Error('Invalid user data in response');
+            }
+
+            // Store user data in localStorage
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            localStorage.setItem('userRole', userData.role);
+            localStorage.setItem('loginTime', new Date().toISOString());
+
+            console.log('💾 User data stored:', userData);
+
+            return userData;
+
+        } catch (error) {
+            console.error('❌ Login process error:', error);
+            throw error;
+        }
+    }
+
+    // Redirect based on user role
+    function redirectUser(userRole) {
+        console.log('🔄 Redirecting user with role:', userRole);
+
+        const rolePaths = {
+            'PET_OWNER': 'dashboard.html',
+            'VETERINARIAN': 'medical-record.html',
+            'GROOMER': 'groomer-dashboard.html',
+            'SHOP_KEEPER': 'shopkeeper-dashboard.html',
+            'APPOINTMENT_MANAGER': 'appointment-dashboard.html',
+            'ADMIN': 'admin-dashboard.html',
+            'OWNER': 'dashboard.html'
+        };
+
+        const redirectPath = rolePaths[userRole] || 'dashboard.html';
+        console.log('🎯 Redirecting to:', redirectPath);
+
+        // Add slight delay for better UX
+        setTimeout(() => {
+            window.location.href = redirectPath;
+        }, 1000);
+    }
+
+    // Form submission handler
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const submitButton = e.target.querySelector('button[type="submit"]');
+
+        // Basic validation
+        if(!email || !password){
+            showNote('Please enter both email and password', 'error');
+            return;
+        }
+
+        if(password.length < 6){
+            showNote('Password must be at least 6 characters', 'error');
+            return;
+        }
+
+        // Disable button and show loading state
+        const originalButtonText = submitButton.textContent;
+        submitButton.textContent = 'Logging in...';
+        submitButton.disabled = true;
+
+        try {
+            showNote('Attempting login...', 'success');
+
+            // First check if backend is reachable
+            const isBackendAlive = await testBackendConnection();
+            if(!isBackendAlive) {
+                throw new Error('Backend server is not accessible');
+            }
+
+            // Attempt login
+            const userData = await handleLogin(email, password);
+
+            // Success
+            showNote(`Welcome back, ${userData.username || userData.email}!`, 'success');
+
+            // Remember me functionality
+            const rememberMe = document.getElementById('remember').checked;
+            if(rememberMe) {
+                localStorage.setItem('rememberedEmail', email);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+            }
+
+            // Redirect user
+            redirectUser(userData.role);
+
+        } catch (error) {
+            console.error('💥 Final login error:', error);
+
+            // User-friendly error messages
+            let userMessage = error.message;
+
+            if(error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                userMessage = 'Cannot connect to server. Please check your internet connection and make sure the backend is running.';
+            } else if(error.message.includes('Invalid credentials') || error.message.includes('Unauthorized')) {
+                userMessage = 'Invalid email/username or password. Please try again.';
+            } else if(error.message.includes('backend') || error.message.includes('server')) {
+                userMessage = 'Server connection issue. Please try again in a moment.';
+            }
+
+            showNote(`Login failed: ${userMessage}`, 'error');
+
+            // Optional: Auto-create test user on first failure
+            if(error.message.includes('Invalid credentials') || error.message.includes('Unauthorized')) {
+                console.log('🔄 Attempting to create test user...');
+                setTimeout(async () => {
+                    const testUser = await createTestUser();
+                    if(testUser) {
+                        showNote('Test user created. Try logging in with: demo@example.com / password123', 'success');
+                    }
+                }, 2000);
+            }
+
+        } finally {
+            // Re-enable button
+            submitButton.textContent = originalButtonText;
+            submitButton.disabled = false;
+        }
+    });
+
+    // Page load initialization
+    window.addEventListener('load', () => {
+        console.log('🚀 Login page loaded');
+
+        // Fill remembered email
+        const rememberedEmail = localStorage.getItem('rememberedEmail');
+        if(rememberedEmail) {
+            document.getElementById('email').value = rememberedEmail;
+            document.getElementById('remember').checked = true;
+        }
+
+        // Test backend connection on load
+        setTimeout(() => {
+            testBackendConnection();
+        }, 1000);
+
+        // Add enter key support
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    });
+
+    // Utility function to check login status
+    function checkLoginStatus() {
+        const userData = localStorage.getItem('currentUser');
+        if(userData) {
+            try {
+                return JSON.parse(userData);
+            } catch {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    // Debug helper - expose to console
+    window.loginDebug = {
+        testBackend: testBackendConnection,
+        createTestUser: createTestUser,
+        checkStatus: checkLoginStatus,
+        clearStorage: () => {
+            localStorage.clear();
+            console.log('🧹 Storage cleared');
+            showNote('Storage cleared', 'success');
+        }
+    };
+
+    console.log('🔧 Login system initialized. Use loginDebug in console for testing.');
+</script>
+</body>
+</html>

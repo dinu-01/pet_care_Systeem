@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1"
+    />
+    <title>Happy Paws • Pet Owner Dashboard</title>
+
+    <!-- Icons & Fonts -->
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+            referrerpolicy="no-referrer"
+    />
+    <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+            rel="stylesheet"
+    />
+
+    <style>
+
+        :root {
+            /* Light theme */
+            --bg: #f3f6fb;
+            --panel: #ffffff;
+            --muted: #6b7280;
+            --text: #0f172a;
+            --border: rgba(15, 23, 42, 0.08);
+            --primary: #6d5dfc;
+            --secondary: #a855f7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+
+            /* Shared */
+            --white: #ffffff;
+            --card-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --glass: rgba(255, 255, 255, 0.6);
+            --blur: blur(10px);
+
+            /* Animations */
+            --dur-fast: 220ms;
+            --dur: 380ms;
+            --easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* Dark theme */
+        [data-theme="dark"] {
+            --bg: #0b1020;
+            --panel: #111831;
+            --muted: #9aa3b2;
+            --text: #e8ecf3;
+            --border: rgba(255, 255, 255, 0.06);
+            --primary: #7c5cff;
+            --secondary: #22c55e;
+            --card-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+            --glass: rgba(17, 24, 49, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            color: var(--text);
+            background:
+                    radial-gradient(1200px 600px at -10% -10%, rgba(124, 92, 255, 0.15), transparent 40%),
+                    radial-gradient(1000px 700px at 110% 20%, rgba(34, 197, 94, 0.15), transparent 35%),
+                    var(--bg);
+            line-height: 1.35;
+        }
+        /* ===== Announcement Dropdown ===== */
+        .announcement-dropdown {
+            position: absolute;
+            top: 72px;
+            right: 36px;
+            width: 300px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--card-shadow);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: pop-in var(--dur) var(--easing);
+            z-index: 2000;
+        }
+        .announcement-dropdown.active {
+            display: flex;
+        }
+        .announcement-dropdown .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+        }
+        .announcement-dropdown .head h3 {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .announcement-dropdown .head button {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .announcement-dropdown .content {
+            display: grid;
+            gap: 10px;
+            padding: 12px 14px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .announcement-item {
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+            display: grid;
+            gap: 4px;
+        }
+        .announcement-item small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* ===== Background Video ===== */
+        #bgVideo {
+            position:fixed;top:0;left:0;width:100%;height:100%;
+            object-fit:cover;z-index:-1;
+            opacity:.35;filter:brightness(.85);
+            transition:opacity .8s ease;
+        }
+        [data-theme="dark"] #bgVideo{opacity:.25;filter:brightness(.6)}
+
+        /* ====== Layout ====== */
+        .layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ====== Sidebar ====== */
+        .sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            background:
+                    linear-gradient(180deg, rgba(124, 92, 255, 0.16), rgba(34, 197, 94, 0.16)),
+                    linear-gradient(160deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            backdrop-filter: blur(6px);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
+            animation: pop-in var(--dur) var(--easing) both;
+        }
+
+        .brand i {
+            font-size: 22px;
+        }
+
+        .brand h2 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
+        .sidebar small {
+            opacity: 0.95;
+        }
+
+        .menu {
+            display: grid;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .menu a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            transition: transform var(--dur-fast) var(--easing), background var(--dur-fast) var(--easing);
+            will-change: transform;
+        }
+
+        .menu a i {
+            width: 22px;
+            text-align: center;
+            opacity: 0.95;
+        }
+
+        .menu a:hover {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .menu a.active {
+            background: rgba(255, 255, 255, 0.22);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            display: grid;
+            gap: 10px;
+        }
+
+        .sidebar .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 12px;
+            color: var(--text);
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform var(--dur-fast) var(--easing);
+        }
+
+        .sidebar .btn:hover { transform: translateY(-2px); }
+
+        /* Collapser (mobile) */
+        .collapse-toggle {
+            position: absolute;
+            top: 16px;
+            right: -14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        /* ====== Main ====== */
+        .main {
+            padding: 26px min(4vw, 36px);
+            display: grid;
+            gap: 24px;
+        }
+
+        .topbar {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hello {
+            display: grid;
+            gap: 6px;
+        }
+
+        .hello h1 {
+            font-size: clamp(20px, 2.4vw, 28px);
+            letter-spacing: 0.2px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hello h1 .wave {
+            display: inline-block;
+            transform-origin: 70% 70%;
+            animation: wave 3.5s infinite;
+        }
+
+        .hello p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .user-chip {
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: var(--card-shadow);
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(140deg, var(--primary), var(--secondary));
+            color: white;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .user-meta small {
+            color: var(--muted);
+            display: block;
+            margin-top: 2px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .tool {
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: var(--card-shadow);
+            transition: transform var(--dur-fast) var(--easing);
+        }
+        .tool:hover { transform: translateY(-2px); }
+
+        /* ====== Cards ====== */
+        .grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .stats {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--card-shadow);
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+            transform: translateY(8px);
+            opacity: 0;
+            animation: slide-up var(--dur) var(--easing) forwards;
+        }
+
+        .card .icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: white;
+            margin-bottom: 12px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
+        }
+
+        .icon.primary { background: linear-gradient(135deg, #6d5dfc, #a855f7); }
+        .icon.success { background: linear-gradient(135deg, #10b981, #34d399); }
+        .icon.warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+
+        .card h3 {
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .card .value {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+        }
+
+        /* Quick Actions */
+        .actions {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        .action {
+            background: linear-gradient(180deg, var(--glass), transparent);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            text-decoration: none;
+            color: var(--text);
+            display: grid;
+            gap: 8px;
+            transition: transform var(--dur-fast) var(--easing), box-shadow var(--dur-fast) var(--easing);
+        }
+
+        .action i {
+            font-size: 20px;
+            color: var(--primary);
+        }
+
+        .action:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow);
+        }
+
+        /* Activity Widget */
+        .activity {
+            display: grid;
+            gap: 10px;
+        }
+
+        .activity .row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .activity .row:last-child { border-bottom: none; }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .pill.appointment { background: linear-gradient(135deg, #6d5dfc, #a855f7); }
+        .pill.order       { background: linear-gradient(135deg, #10b981, #34d399); }
+        .pill.pet         { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .pill.system      { background: linear-gradient(135deg, #ef4444, #f87171); }
+
+        .time {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* Notifications Toast */
+        .toast {
+            position: fixed;
+            top: 22px;
+            right: 22px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: white;
+            z-index: 1000;
+            box-shadow: var(--card-shadow);
+            animation: slide-left var(--dur) var(--easing);
+            display: grid;
+            grid-auto-flow: column;
+            gap: 10px;
+            align-items: center;
+        }
+        .toast.info { background: linear-gradient(135deg, var(--primary), #4f46e5); }
+        .toast.success { background: linear-gradient(135deg, var(--success), #22c55e); }
+        .toast.warning { background: linear-gradient(135deg, var(--warning), #f59e0b); }
+        .toast.error { background: linear-gradient(135deg, var(--error), #f97316); }
+
+        .toast button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 6px;
+        }
+
+        /* Help Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+
+        .modal .box {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: min(560px, 92vw);
+            max-height: 80vh;
+            overflow: auto;
+            box-shadow: var(--card-shadow);
+            animation: pop-in var(--dur) var(--easing);
+        }
+
+        .modal .head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal .content {
+            padding: 18px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .modal .head h2 { font-size: 18px; }
+        .modal .close {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Collapsed sidebar (mobile) */
+        @media (max-width: 1020px) {
+            .layout {
+                grid-template-columns: 84px 1fr;
+            }
+            .sidebar .label {
+                display: none;
+            }
+            .brand h2, .sidebar small { display: none; }
+        }
+
+        @media (max-width: 720px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: fixed;
+                left: 0; top: 0; bottom: 0;
+                width: 260px;
+                transform: translateX(-100%);
+                transition: transform var(--dur) var(--easing);
+                z-index: 1001;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .collapse-toggle {
+                top: 16px;
+                left: 16px;
+                right: auto;
+            }
+            .main { padding-top: 70px; }
+        }
+
+        /* ====== Animations ====== */
+        @keyframes slide-up {
+            from { transform: translateY(14px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slide-left {
+            from { transform: translateX(40px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes pop-in {
+            from { transform: scale(0.96); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes wave {
+            0% { transform: rotate(0deg); }
+            10% { transform: rotate(16deg); }
+            20% { transform: rotate(-8deg); }
+            30% { transform: rotate(14deg); }
+            40% { transform: rotate(-4deg); }
+            50% { transform: rotate(10deg); }
+            60% { transform: rotate(0deg); }
+            100% { transform: rotate(0deg); }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Background video -->
+<video autoplay muted loop playsinline id="bgVideo">
+    <source src="videos/petcare1.mp4" type="video/mp4">
+</video>
+<div class="layout" id="app">
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar" id="sidebar">
+        <button class="collapse-toggle" id="toggleSidebar" title="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="brand">
+            <i class="fa-solid fa-paw"></i>
+            <h2>Happy Paws</h2>
+        </div>
+        <small>Pet Owner Dashboard</small>
+
+        <nav class="menu">
+            <a href="dashboard.html" class="active">
+                <i class="fa-solid fa-house"></i><span class="label">Dashboard</span>
+            </a>
+            <a href="pet.html">
+                <i class="fa-solid fa-paw"></i><span class="label">My Pets</span>
+            </a>
+            <a href="AppimentManage.html">
+                <i class="fa-solid fa-calendar-check"></i><span class="label">Appointments</span>
+            </a>
+            <a href="product.html">
+                <i class="fa-solid fa-cart-shopping"></i><span class="label">Pet Shop</span>
+            </a>
+            <a href="owner_medical_reports.html">
+                <i class="fa-solid fa-file-medical"></i><span class="label">Medical Reports</span>
+            </a>
+            <a href="owner_grooming_reports.html">
+                <i class="fa-solid fa-scissors"></i><span class="label">Grooming Records</span>
+            </a>
+            <a href="#">
+                <i class="fa-solid fa-gear"></i><span class="label">Settings</span>
+            </a>
+            <li><a href="feedback.html"><i class="fas fa-comment-dots"></i> My Feedback</a></li>
+            <a href="index.html">
+                <i class="fa-solid fa-right-from-bracket"></i><span class="label">Logout</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="btn" id="themeToggle">
+                <i class="fa-solid fa-moon"></i> <span class="label">Toggle Theme</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <main class="main">
+        <div class="topbar">
+            <div class="hello">
+                <h1>Welcome, <span id="userName">Pet Owner</span>! <span class="wave">👋</span></h1>
+                <p>Manage your pets, appointments and orders in one place.</p>
+            </div>
+
+            <div class="toolbar">
+                <!-- 🔔 Announcement Icon -->
+                <div class="tool" id="announcementBtn" title="Announcements">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <!-- 🔔 Announcement Dropdown -->
+                <div class="announcement-dropdown" id="announcementDropdown">
+                    <div class="head">
+                        <h3><i class="fa-solid fa-bullhorn"></i> Announcements</h3>
+                        <button id="closeAnnouncements">&times;</button>
+                    </div>
+                    <div class="content" id="announcementList">
+                        <p>No new announcements 🎉</p>
+                    </div>
+                </div>
+
+                <div class="user-chip">
+                    <div class="avatar" id="userAvatar">PO</div>
+                    <div class="user-meta">
+                        <strong id="userFullName">Pet Owner</strong>
+                        <small id="userEmail">owner@example.com</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Next Appointment gets injected after stats -->
+
+        <!-- Quick Actions -->
+        <section class="grid actions">
+            <a href="pet.html" class="action reveal" id="btnAddPet">
+                <i class="fa-solid fa-plus"></i>
+                <div><strong>Add Pet</strong><br/><small class="muted">Create or update pet profiles</small></div>
+            </a>
+            <a href="AppimentManage.html" class="action reveal" id="btnBookApt">
+                <i class="fa-solid fa-calendar-plus"></i>
+                <div><strong>Book Appointment</strong><br/><small>Vet visits & services</small></div>
+            </a>
+            <a href="product.html" class="action reveal" id="btnShop">
+                <i class="fa-solid fa-store"></i>
+                <div><strong>Shop Now</strong><br/><small>Food, toys & accessories</small></div>
+            </a>
+            <a href="#" class="action reveal" id="btnHelp">
+                <i class="fa-solid fa-circle-question"></i>
+                <div><strong>Help</strong><br/><small>FAQs & Support</small></div>
+            </a>
+        </section>
+
+        <!-- Activity -->
+        <section class="card reveal" id="recentActivityWidget" style="display:none;">
+            <h3 style="margin-bottom:8px;">Recent Activity</h3>
+            <div class="activity" id="activityList"></div>
+        </section>
+
+        <!-- Empty state fallback -->
+        <section class="card reveal" id="emptyState" style="display:none;">
+            <h3>Welcome to Happy Paws 🎉</h3>
+            <p class="muted" style="color:var(--muted);">
+                It looks a little quiet here. Let’s add some sample data so you can explore the dashboard.
+            </p>
+
+        </section>
+    </main>
+</div>
+
+<!-- Help Modal -->
+<div class="modal" id="helpModal" aria-hidden="true">
+    <div class="box">
+        <div class="head">
+            <h2><i class="fa-solid fa-circle-question"></i> Help & Support</h2>
+            <button class="close" data-close-modal>&times;</button>
+        </div>
+        <div class="content">
+            <div>
+                <h3>Need Assistance?</h3>
+                <ul style="margin-left:18px; margin-top:6px;">
+                    <li>🐾 Pet profile management</li>
+                    <li>📅 Appointment scheduling</li>
+                    <li>🛍️ Orders & payments</li>
+                    <li>📋 Medical records</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Contact Us</h3>
+                <p><i class="fa-solid fa-phone"></i> +1 (555) 123-PAWS</p>
+                <p><i class="fa-solid fa-envelope"></i> support@happypaws.com</p>
+                <p><i class="fa-solid fa-clock"></i> 24/7 Customer Support</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // -------------------------------
+    // Utility: Toast Notifications
+    // -------------------------------
+    function showDashboardNotification(message, type = "info") {
+        document.querySelectorAll(".toast").forEach(t => t.remove());
+        const t = document.createElement("div");
+        t.className = `toast ${type}`;
+        t.innerHTML = `
+        <i class="fa-solid fa-${getNotificationIcon(type)}"></i>
+        <span>${message}</span>
+        <button title="Close" aria-label="Close">&times;</button>
+      `;
+        t.querySelector("button").onclick = () => t.remove();
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 5000);
+    }
+
+    function getNotificationIcon(type) {
+        const map = { success: "check-circle", error: "triangle-exclamation", warning: "exclamation", info: "circle-info" };
+        return map[type] || "circle-info";
+    }
+
+    // -------------------------------
+    // Theme Toggle (Persisted)
+    // -------------------------------
+    const themeToggleBtn = document.getElementById("themeToggle");
+    const savedTheme = localStorage.getItem("hp_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+
+    themeToggleBtn?.addEventListener("click", () => {
+        const cur = document.documentElement.getAttribute("data-theme");
+        const next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("hp_theme", next);
+        showDashboardNotification(`Switched to ${next === "dark" ? "Dark" : "Light"} mode`, "success");
+    });
+
+    // -------------------------------
+    // Sidebar Collapser (mobile)
+    // -------------------------------
+    const sidebar = document.getElementById("sidebar");
+    document.getElementById("toggleSidebar")?.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+    });
+    // Close sidebar on outside click (mobile)
+    document.addEventListener("click", (e) => {
+        if (window.innerWidth <= 720) {
+            if (!sidebar.contains(e.target) && !e.target.closest("#toggleSidebar")) {
+                sidebar.classList.remove("open");
+            }
+        }
+    });
+
+    // -------------------------------
+    // Reveal on Scroll
+    // -------------------------------
+    const observer = new IntersectionObserver(
+        (entries) => entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.style.animationDelay = (Array.from(e.target.parentNode.children).indexOf(e.target) * 60) + "ms";
+                e.target.classList.add("visible");
+            }
+        }),
+        { threshold: 0.08 }
+    );
+    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+    // -------------------------------
+    // Init Dashboard
+    // -------------------------------
+    document.addEventListener("DOMContentLoaded", initializeDashboard);
+
+    function initializeDashboard() {
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser) {
+            // Demo fallback – create a basic user so page can show
+            const demoUser = { id: 1, firstName: "Pet", lastName: "Owner", email: "owner@example.com" };
+            localStorage.setItem("currentUser", JSON.stringify(demoUser));
+        }
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        updateUserInfo(user);
+        loadDashboardData(user.id);
+        setupEventListeners();
+        setupEmptyState(user.id);
+    }
+
+    // -------------------------------
+    // User Info
+    // -------------------------------
+    function updateUserInfo(user) {
+        const userName = document.getElementById("userName");
+        const userFullName = document.getElementById("userFullName");
+        const userEmail = document.getElementById("userEmail");
+        const userAvatar = document.getElementById("userAvatar");
+
+        userName.textContent = user.firstName || "Pet Owner";
+        userFullName.textContent = `${user.firstName || "Pet"} ${user.lastName || "Owner"}`;
+        userEmail.textContent = user.email || "owner@example.com";
+        userAvatar.textContent = `${(user.firstName?.[0] || "P").toUpperCase()}${(user.lastName?.[0] || "O").toUpperCase()}`;
+    }
+
+    // -------------------------------
+    // Load Dashboard Data
+    // -------------------------------
+    function loadDashboardData(ownerId) {
+        loadPetsCount(ownerId);
+        loadUpcomingAppointments(ownerId);
+        loadRecentOrders(ownerId);
+        loadRecentActivity(ownerId);
+    }
+
+    function loadPetsCount(ownerId) {
+        const allPets = JSON.parse(localStorage.getItem("pets")) || [];
+        const ownerPets = allPets.filter(p => String(p.ownerId) === String(ownerId));
+        document.getElementById("petCount").textContent = ownerPets.length;
+        updatePetStatus(ownerPets);
+    }
+
+    function updatePetStatus(pets) {
+        // Placeholder for future health/vaccination alerts
+        // Example trigger
+        const needsCare = pets.filter(() => false);
+        if (needsCare.length > 0) {
+            showDashboardNotification(`${needsCare.length} of your pets need attention`, "warning");
+        }
+    }
+
+    function loadUpcomingAppointments(ownerId) {
+        const allAppointments = JSON.parse(localStorage.getItem("appointments")) || [];
+        const now = new Date();
+        const upcoming = allAppointments.filter(a =>
+            String(a.ownerId) === String(ownerId) &&
+            new Date(`${a.date} ${a.time}`) > now &&
+            (a.status === "scheduled" || a.status === "confirmed")
+        ).sort((a, b) => new Date(`${a.date} ${a.time}`) - new Date(`${b.date} ${b.time}`));
+
+        document.getElementById("upcomingAppointments").textContent = upcoming.length;
+        loadNextAppointment(upcoming);
+    }
+
+    function loadNextAppointment(appointments) {
+        let nextAptWidget = document.getElementById("nextAppointmentWidget");
+        if (appointments.length === 0) {
+            if (nextAptWidget) nextAptWidget.remove();
+            return;
+        }
+        if (!nextAptWidget) {
+            nextAptWidget = document.createElement("section");
+            nextAptWidget.className = "card reveal";
+            nextAptWidget.id = "nextAppointmentWidget";
+            nextAptWidget.innerHTML = `
+          <div class="icon primary"><i class="fa-solid fa-calendar-day"></i></div>
+          <h3>Next Appointment</h3>
+          <div class="value" id="nextAppointmentDetails">Loading…</div>
+        `;
+            document.getElementById("statsGrid").after(nextAptWidget);
+            observer.observe(nextAptWidget);
+        }
+
+        const n = appointments[0];
+        const dt = new Date(`${n.date} ${n.time}`);
+        const d = dt.toLocaleDateString();
+        const t = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        document.getElementById("nextAppointmentDetails").innerHTML =
+            `<strong>${n.type || "Appointment"}</strong><br>${d} at ${t}<br><small>With ${n.veterinarian || "Veterinarian"}</small>`;
+    }
+
+    function loadRecentOrders(ownerId) {
+        const allOrders = JSON.parse(localStorage.getItem("orders")) || [];
+        const mine = allOrders.filter(o => String(o.ownerId) === String(ownerId));
+        const d30 = new Date(); d30.setDate(d30.getDate() - 30);
+        const recent = mine.filter(o => new Date(o.orderDate) > d30);
+        document.getElementById("recentOrders").textContent = recent.length;
+        updateOrdersStatus(mine);
+    }
+
+    function updateOrdersStatus(orders) {
+        const pending = orders.filter(o => ["pending", "processing"].includes(o.status));
+        if (pending.length > 0) {
+            showDashboardNotification(`You have ${pending.length} pending orders`, "info");
+        }
+    }
+
+    function loadRecentActivity(ownerId) {
+        const all = JSON.parse(localStorage.getItem("activities")) || [];
+        const mine = all
+            .filter(a => String(a.ownerId) === String(ownerId))
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .slice(0, 6);
+
+        const wrap = document.getElementById("recentActivityWidget");
+        const list = document.getElementById("activityList");
+        if (mine.length === 0) {
+            wrap.style.display = "none";
+            return;
+        }
+        wrap.style.display = "block";
+        list.innerHTML = mine.map(a => `
+        <div class="row">
+          <div class="pill ${a.type}"><i class="fa-solid ${getActivityIcon(a.type)}"></i></div>
+          <div>${a.message}</div>
+          <div class="time">${formatTimeAgo(a.timestamp)}</div>
+        </div>
+      `).join("");
+    }
+
+    function getActivityIcon(type) {
+        const icons = {
+            appointment: "fa-calendar-check",
+            order: "fa-cart-shopping",
+            pet: "fa-paw",
+            system: "fa-bell"
+        };
+        return icons[type] || "fa-bell";
+    }
+
+    function formatTimeAgo(timestamp) {
+        const now = new Date();
+        const t = new Date(timestamp);
+        const mins = Math.floor((now - t) / (1000 * 60));
+        if (mins < 1) return "Just now";
+        if (mins < 60) return `${mins} minutes ago`;
+        if (mins < 1440) return `${Math.floor(mins / 60)} hours ago`;
+        return `${Math.floor(mins / 1440)} days ago`;
+    }
+
+    // -------------------------------
+    // Events & Navigation
+    // -------------------------------
+    function setupEventListeners() {
+        // Quick actions
+        document.getElementById("btnAddPet")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "pet.html"; });
+        document.getElementById("btnBookApt")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "AppimentManage.html"; });
+        document.getElementById("btnShop")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "product.html"; });
+        document.getElementById("btnHelp")?.addEventListener("click", (e) => { e.preventDefault(); showHelpModal(); });
+
+        // Logout
+        document.querySelectorAll('a[href="index.html"]').forEach(link => {
+            link.addEventListener("click", (e) => {
+                e.preventDefault();
+                logoutUser();
+            });
+        });
+
+        // Modal close
+        document.querySelectorAll("[data-close-modal]").forEach(btn => {
+            btn.addEventListener("click", closeHelpModal);
+        });
+        document.getElementById("helpModal").addEventListener("click", (e) => {
+            if (e.target.id === "helpModal") closeHelpModal();
+        });
+
+        // Seed data button
+        document.getElementById("seedData")?.addEventListener("click", () => {
+            const user = JSON.parse(localStorage.getItem("currentUser"));
+            generateSampleData(user.id);
+        });
+
+        // Auto-refresh
+        setInterval(() => {
+            const user = JSON.parse(localStorage.getItem("currentUser"));
+            if (user) loadDashboardData(user.id);
+        }, 30000);
+    }
+
+    function showHelpModal() {
+        document.getElementById("helpModal").classList.add("active");
+        document.getElementById("helpModal").setAttribute("aria-hidden", "false");
+    }
+    function closeHelpModal() {
+        document.getElementById("helpModal").classList.remove("active");
+        document.getElementById("helpModal").setAttribute("aria-hidden", "true");
+    }
+
+    function logoutUser() {
+        if (confirm("Are you sure you want to log out?")) {
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("currentOwnerId");
+            window.location.href = "login.html";
+        }
+    }
+
+    // -------------------------------
+    // Sample Data & Empty State
+    // -------------------------------
+    function setupEmptyState(ownerId) {
+        const hasAnyData =
+            (JSON.parse(localStorage.getItem("pets")) || []).some(p => String(p.ownerId) === String(ownerId)) ||
+            (JSON.parse(localStorage.getItem("appointments")) || []).some(a => String(a.ownerId) === String(ownerId)) ||
+            (JSON.parse(localStorage.getItem("orders")) || []).some(o => String(o.ownerId) === String(ownerId));
+
+        document.getElementById("emptyState").style.display = hasAnyData ? "none" : "block";
+    }
+
+    function generateSampleData(ownerId) {
+        const existingPets = JSON.parse(localStorage.getItem("pets")) || [];
+        const ownerPets = existingPets.filter(p => String(p.ownerId) === String(ownerId));
+
+        if (ownerPets.length === 0) {
+            const now = new Date();
+            const plusDays = (d) => { const x = new Date(now); x.setDate(x.getDate() + d); return x; };
+
+            const samplePets = [
+                {
+                    id: Date.now() + 1, ownerId, name: "Buddy", type: "dog", breed: "Golden Retriever",
+                    age: 3, gender: "male", weight: 25, color: "Golden",
+                    description: "Friendly and energetic golden retriever",
+                    vetInfo: "Dr. Smith - Happy Paws Clinic",
+                    image: "https://via.placeholder.com/300x200/667eea/ffffff?text=Buddy",
+                    createdAt: now.toISOString(), updatedAt: now.toISOString()
+                },
+                {
+                    id: Date.now() + 2, ownerId, name: "Whiskers", type: "cat", breed: "Siamese",
+                    age: 2, gender: "female", weight: 4, color: "Cream",
+                    description: "Playful and affectionate Siamese cat",
+                    vetInfo: "Dr. Johnson - City Vet",
+                    image: "https://via.placeholder.com/300x200/f59e0b/ffffff?text=Whiskers",
+                    createdAt: now.toISOString(), updatedAt: now.toISOString()
+                }
+            ];
+            localStorage.setItem("pets", JSON.stringify([...existingPets, ...samplePets]));
+
+            const appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+            appointments.push(
+                { id: Date.now() + 10, ownerId, type: "Grooming", veterinarian: "Dr. Tina",
+                    date: plusDays(2).toISOString().slice(0,10), time: "10:30", status: "scheduled" },
+                { id: Date.now() + 11, ownerId, type: "Checkup", veterinarian: "Dr. Smith",
+                    date: plusDays(7).toISOString().slice(0,10), time: "14:00", status: "confirmed" }
+            );
+            localStorage.setItem("appointments", JSON.stringify(appointments));
+
+            const orders = JSON.parse(localStorage.getItem("orders")) || [];
+            orders.push(
+                { id: Date.now() + 20, ownerId, orderDate: plusDays(-4).toISOString(), status: "delivered" },
+                { id: Date.now() + 21, ownerId, orderDate: plusDays(-1).toISOString(), status: "processing" }
+            );
+            localStorage.setItem("orders", JSON.stringify(orders));
+
+            const activities = JSON.parse(localStorage.getItem("activities")) || [];
+            activities.unshift(
+                { id: Date.now() + 30, ownerId, type: "appointment", message: "Booked grooming appointment", timestamp: plusDays(-2).toISOString() },
+                { id: Date.now() + 31, ownerId, type: "order", message: "Ordered Pet Snacks – 2 items", timestamp: plusDays(-1).toISOString() },
+                { id: Date.now() + 32, ownerId, type: "pet", message: "Added new pet: Buddy", timestamp: plusDays(-6).toISOString() }
+            );
+            localStorage.setItem("activities", JSON.stringify(activities));
+
+            showDashboardNotification("Sample data added. Explore your dashboard!", "success");
+            loadDashboardData(ownerId);
+            setupEmptyState(ownerId);
+        } else {
+            showDashboardNotification("You already have data. Sample data not added.", "warning");
+        }
+    }
+    // ======================================================
+    // 🐾 ROLE-BASED ANNOUNCEMENTS FETCHER (User Dashboard)
+    // ======================================================
+    const ANNOUNCEMENT_URL = "http://localhost:8080/api/v1/announcements/view-all";
+    const announcementDropdown = document.getElementById("announcementDropdown");
+    const announcementBtn = document.getElementById("announcementBtn");
+    const announcementList = document.getElementById("announcementList");
+    const closeAnnouncements = document.getElementById("closeAnnouncements");
+    const unreadBadge = document.createElement("span");
+
+    unreadBadge.className = "unread-badge";
+    announcementBtn.appendChild(unreadBadge);
+
+    async function loadRoleAnnouncements() {
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser) return;
+
+        const userRole = currentUser.role; // e.g. PET_OWNER / SHOP_KEEPER / VETERINARIAN
+        try {
+            const res = await fetch(ANNOUNCEMENT_URL);
+            const list = await res.json();
+
+            // Filter announcements that match the role or are for ALL
+            const filtered = list.filter(a =>
+                a.targetRole === "ALL" || a.targetRole === userRole
+            ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (filtered.length === 0) {
+                announcementList.innerHTML = `<p class="muted">No announcements 🎉</p>`;
+                unreadBadge.style.display = "none";
+                return;
+            }
+
+            // Show unread badge count
+            unreadBadge.textContent = filtered.length;
+            unreadBadge.style.display = "inline-flex";
+
+            // Render list
+            announcementList.innerHTML = filtered.map(a => `
+      <div class="announcement-item">
+        <strong>${a.title}</strong>
+        <p>${a.message}</p>
+        <small>${new Date(a.createdAt).toLocaleString()}</small>
+      </div>
+    `).join("");
+        } catch (err) {
+            console.error("Error loading announcements:", err);
+            announcementList.innerHTML = `<p style="color:var(--error)">⚠️ Failed to load announcements</p>`;
+        }
+    }
+
+    // Toggle dropdown
+    announcementBtn.addEventListener("click", () => {
+        const visible = announcementDropdown.classList.toggle("active");
+        if (visible) loadRoleAnnouncements();
+    });
+
+    // Close dropdown
+    closeAnnouncements.addEventListener("click", () => {
+        announcementDropdown.classList.remove("active");
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+        if (!announcementDropdown.contains(e.target) && !announcementBtn.contains(e.target)) {
+            announcementDropdown.classList.remove("active");
+        }
+    });
+
+</script>
+</body>
+</html>

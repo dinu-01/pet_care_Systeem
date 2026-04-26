@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Veterinarian Dashboard – Medical Reports</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --bg: #0b1020;
+            --card: #121935;
+            --muted: #9aa3b2;
+            --text: #e8ecf3;
+            --primary: #7c5cff;
+            --primary-600:#6b4cf5;
+            --accent: #00d3a7;
+            --danger:#ff5c7a;
+            --ring: rgba(124,92,255,.35);
+            --border: #243057;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+            background: radial-gradient(1200px 800px at 10% -10%, #1b2350 0%, transparent 60%),
+            radial-gradient(1000px 600px at 90% 0%, #13234a 0%, transparent 60%),
+            var(--bg);
+            color:var(--text);
+        }
+        /* ===== 🔔 Announcement Dropdown (Fixed) ===== */
+        .announcement-dropdown {
+            position: absolute;
+            top: 72px;
+            right: 36px;
+            width: 300px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeDown 0.25s ease-out;
+            z-index: 2000;
+        }
+
+        .announcement-dropdown.active {
+            display: flex;
+        }
+
+        .announcement-dropdown .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+        }
+
+        .announcement-dropdown .head h3 {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+        }
+
+        .announcement-dropdown .head button {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .announcement-dropdown .head button:hover {
+            color: var(--primary);
+        }
+
+        .announcement-dropdown .content {
+            display: grid;
+            gap: 10px;
+            padding: 12px 14px;
+            max-height: 240px;
+            overflow-y: auto;
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        }
+
+        .announcement-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(14, 22, 49, 0.8);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+            display: grid;
+            gap: 4px;
+            transition: background 0.25s ease, transform 0.25s ease;
+        }
+        .announcement-item:hover {
+            background: rgba(14, 22, 49, 0.95);
+            transform: translateY(-2px);
+        }
+        .announcement-item strong {
+            color: var(--primary);
+            font-size: 14px;
+        }
+        .announcement-item p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+        .announcement-item small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* 🔴 Unread Badge */
+        .unread-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 6px rgba(255, 92, 122, 0.5);
+        }
+
+        /* 🔔 Bell button styling */
+        .tool {
+            position: relative;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: var(--accent);
+            transition: background 0.25s ease, transform 0.2s ease;
+        }
+        .tool:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.05);
+        }
+        .tool i {
+            font-size: 16px;
+        }
+
+        /* Animation */
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header{
+            display:flex;justify-content:space-between;align-items:center;
+            background:rgba(255,255,255,0.05);
+            border-radius:12px;padding:14px 20px;margin-bottom:25px;
+            border:1px solid var(--border);
+        }
+
+        .brand{display:flex; gap:14px; align-items:center}
+        .logo{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:#1e2a56}
+        .app-header h1{margin:0;font-size:20px}
+        .muted{margin:2px 0 0;color:var(--muted);font-size:12px}
+        .vet-id{display:flex; gap:8px; align-items:end}
+        .vet-id label{font-size:12px;color:var(--muted)}
+        .vet-id input{width:120px}
+
+        .container{max-width:1200px; margin:24px auto; padding:0 16px}
+        .card{
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+            border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        }
+        .card-header{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:8px}
+        .card h2{margin:0; font-size:18px}
+
+        .selectors{display:grid; grid-template-columns:1fr 1fr auto; gap:12px; align-items:end}
+        .field{display:flex; flex-direction:column; gap:6px}
+        .field label{font-size:13px; color:var(--muted)}
+        .req{color:#ffb86b}
+
+        input, select, textarea{
+            background:#0e1631; border:1px solid var(--border); color:var(--text);
+            border-radius:10px; padding:10px 12px; outline:none; transition:.2s border, .2s box-shadow;
+        }
+        input:focus, select:focus, textarea:focus{border-color:var(--primary); box-shadow:0 0 0 4px var(--ring)}
+        .search{min-width:260px}
+
+        .actions{display:flex; gap:10px; justify-content:flex-end}
+        .btn{padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:#0e1631; color:var(--text); cursor:pointer}
+        .btn:hover{border-color:#3a4a80}
+        .btn-primary{background: linear-gradient(90deg, var(--primary), var(--accent)); border:none}
+        .btn-primary:hover{filter:brightness(1.05)}
+        .btn-secondary{background:#16214a}
+        .icon-btn{background:transparent; border:none; color:var(--muted); font-size:18px; cursor:pointer}
+        .icon-btn:hover{color:var(--text)}
+
+        .table-wrap{overflow:auto; border-radius:12px; border:1px solid var(--border)}
+        table{width:100%; border-collapse:collapse; font-size:14px}
+        th, td{padding:12px 10px; border-bottom:1px solid var(--border)}
+        th{position:sticky; top:0; background:#0f1837; text-align:left}
+        .center{text-align:center}
+        .tag{font-size:12px; padding:2px 8px; border-radius:999px; background:#142152; border:1px solid #2a3c7a}
+        .row-actions{display:flex; gap:8px; justify-content:center}
+        .row-actions .btn{padding:6px 10px; font-size:12px}
+        .btn-danger{background:linear-gradient(90deg, #ff5c7a, #ff7fa0); border:none}
+
+        /* Modal */
+        .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(5,8,20,.6); backdrop-filter: blur(3px); z-index:10}
+        .modal[aria-hidden="false"]{display:flex}
+        .modal-dialog{width:min(720px, 94vw); background:#0f1837; border:1px solid var(--border); border-radius:16px; overflow:hidden}
+        .modal-header, .modal-footer{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border)}
+        .modal-footer{border-top:1px solid var(--border); border-bottom:none}
+        .modal-body{padding:16px}
+        .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+        .col-2{grid-column:1 / -1}
+
+        /* Toast */
+        #toast{position:fixed; bottom:20px; right:20px; display:grid; gap:8px; z-index:20}
+        .toast{
+            background:#0e1631; border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:10px;
+            box-shadow:0 10px 24px rgba(0,0,0,.35); animation:slideIn .25s ease-out;
+        }
+        .toast.success{border-color:#1e9d7a}
+        .toast.error{border-color:#cc3b5a}
+        @keyframes slideIn{from{transform:translateY(8px); opacity:0} to{transform:translateY(0); opacity:1}}
+
+        /* Validation Styles */
+        .error-message {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field.error input,
+        .field.error textarea {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 2px rgba(255, 92, 122, 0.2);
+        }
+
+        .field.error .error-message {
+            display: block;
+        }
+
+        @media (max-width: 840px){
+            .selectors{grid-template-columns:1fr;}
+            .grid{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+<header class="app-header">
+    <div class="brand">
+        <div class="logo">🐾</div>
+        <div>
+            <h1>Veterinarian Dashboard</h1>
+            <p class="muted">Manage Medical Reports • Owner → Pet • CRUD</p>
+        </div>
+    </div>
+    <div class="vet-id">
+        <label for="vetId">Vet ID</label>
+        <input id="vetId" type="number" min="1" placeholder="e.g. 2" />
+        <button id="saveVetId" class="btn btn-secondary">Use</button>
+        <!-- 🔔 Announcement Icon -->
+        <div class="tool" id="announcementBtn" title="Announcements">
+            <i class="fa-solid fa-bell"></i>
+            <span class="unread-badge" id="unreadBadge">0</span>
+        </div>
+        <!-- 🔔 Announcement Dropdown -->
+        <div class="announcement-dropdown" id="announcementDropdown">
+            <div class="head">
+                <h3><i class="fa-solid fa-bullhorn"></i> Announcements</h3>
+                <button id="closeAnnouncements">&times;</button>
+            </div>
+            <div class="content" id="announcementList">
+                <p>No new announcements 🎉</p>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <!-- Filters / selectors -->
+    <section class="card selectors">
+        <div class="field">
+            <label for="ownerSelect">Pet Owner</label>
+            <select id="ownerSelect">
+                <option value="">— Select Owner —</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="petSelect">Pet</label>
+            <select id="petSelect" disabled>
+                <option value="">— Select Pet —</option>
+            </select>
+        </div>
+        <div class="actions">
+            <button id="refreshReports" class="btn">Refresh Reports</button>
+            <button id="openCreateModal" class="btn btn-primary" disabled>+ New Report</button>
+        </div>
+    </section>
+
+    <!-- Table -->
+    <section class="card">
+        <div class="card-header">
+            <h2>Medical Reports</h2>
+            <input id="searchBox" class="search" placeholder="Search diagnosis / symptoms / code..." />
+        </div>
+        <div class="table-wrap">
+            <table id="reportsTable">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Pet</th>
+                    <th>Owner</th>
+                    <th>Diagnosis</th>
+                    <th>Report Date</th>
+                    <th>Next Visit</th>
+                    <th class="center">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- rows injected here -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Create / Edit Modal -->
+<div class="modal" id="reportModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 id="modalTitle">Create Medical Report</h3>
+            <button class="icon-btn" id="closeModal">✕</button>
+        </div>
+        <form id="reportForm" class="modal-body">
+            <div class="grid">
+                <div class="field" id="diagnosisField">
+                    <label for="diagnosis">Diagnosis <span class="req">*</span></label>
+                    <input id="diagnosis" name="diagnosis" required />
+                    <div class="error-message" id="diagnosisError">Diagnosis cannot contain only numbers</div>
+                </div>
+                <div class="field" id="symptomsField">
+                    <label for="symptoms">Symptoms</label>
+                    <input id="symptoms" name="symptoms" />
+                    <div class="error-message" id="symptomsError">Symptoms cannot contain only numbers</div>
+                </div>
+                <div class="field" id="treatmentField">
+                    <label for="treatment">Treatment</label>
+                    <input id="treatment" name="treatment" />
+                    <div class="error-message" id="treatmentError">Treatment cannot contain only numbers</div>
+                </div>
+                <div class="field" id="medicationsField">
+                    <label for="medications">Medications</label>
+                    <input id="medications" name="medications" />
+                    <div class="error-message" id="medicationsError">Medications cannot contain only numbers</div>
+                </div>
+                <div class="field col-2" id="notesField">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+                <div class="field col-2" id="nextVisitField">
+                    <label for="nextVisitDate">Next Visit (optional)</label>
+                    <input id="nextVisitDate" name="nextVisitDate" type="datetime-local" />
+                    <div class="error-message" id="nextVisitError">Next visit date must be in the future</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelModal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="submitReport">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal" id="viewModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Medical Report</h3>
+            <button class="icon-btn" id="closeViewModal">✕</button>
+        </div>
+        <div class="modal-body" id="viewContent">
+            <!-- filled by JS -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="okView">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toasts -->
+<div id="toast"></div>
+
+<script>
+    // ================= CONFIG =================
+    const BASE_URL = "http://localhost:8080";  // Spring Boot base
+    let VET_ID = 2; // default veterinarian id
+
+    // ================= ELEMENTS =================
+    const ownerSelect = document.getElementById("ownerSelect");
+    const petSelect = document.getElementById("petSelect");
+    const refreshBtn = document.getElementById("refreshReports");
+    const openCreateBtn = document.getElementById("openCreateModal");
+    const searchBox = document.getElementById("searchBox");
+    const tableBody = document.querySelector("#reportsTable tbody");
+
+    const reportModal = document.getElementById("reportModal");
+    const viewModal = document.getElementById("viewModal");
+    const closeModalBtn = document.getElementById("closeModal");
+    const cancelModalBtn = document.getElementById("cancelModal");
+    const closeViewModalBtn = document.getElementById("closeViewModal");
+    const okViewBtn = document.getElementById("okView");
+    const modalTitle = document.getElementById("modalTitle");
+    const reportForm = document.getElementById("reportForm");
+    const viewContent = document.getElementById("viewContent");
+
+    const vetIdInput = document.getElementById("vetId");
+    const saveVetIdBtn = document.getElementById("saveVetId");
+
+    // ================= VALIDATION ELEMENTS =================
+    const diagnosisField = document.getElementById("diagnosisField");
+    const symptomsField = document.getElementById("symptomsField");
+    const treatmentField = document.getElementById("treatmentField");
+    const medicationsField = document.getElementById("medicationsField");
+    const nextVisitField = document.getElementById("nextVisitField");
+
+    const diagnosisInput = document.getElementById("diagnosis");
+    const symptomsInput = document.getElementById("symptoms");
+    const treatmentInput = document.getElementById("treatment");
+    const medicationsInput = document.getElementById("medications");
+    const nextVisitInput = document.getElementById("nextVisitDate");
+
+    // ================= ANNOUNCEMENT ELEMENTS =================
+    const announcementDropdown = document.getElementById("announcementDropdown");
+    const announcementBtn = document.getElementById("announcementBtn");
+    const announcementList = document.getElementById("announcementList");
+    const closeAnnouncements = document.getElementById("closeAnnouncements");
+    const unreadBadge = document.getElementById("unreadBadge");
+
+    // ================= STATE =================
+    let owners = [];
+    let pets = [];
+    let reports = [];
+    let editingId = null;
+
+    // ================= HELPERS =================
+    const toastRoot = document.getElementById("toast");
+    function toast(msg, type = "success") {
+        const el = document.createElement("div");
+        el.className = `toast ${type}`;
+        el.textContent = msg;
+        toastRoot.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    function openModal() {
+        reportModal.setAttribute("aria-hidden", "false");
+        // Clear any previous validation errors
+        clearValidationErrors();
+    }
+
+    function closeModal() {
+        reportModal.setAttribute("aria-hidden", "true");
+        reportForm.reset();
+        editingId = null;
+        clearValidationErrors();
+    }
+
+    function openView() {
+        viewModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeView() {
+        viewModal.setAttribute("aria-hidden", "true");
+        viewContent.innerHTML = "";
+    }
+
+    function fmtDate(dt) {
+        if (!dt) return "—";
+        try {
+            return new Date(dt).toLocaleString();
+        } catch {
+            return dt;
+        }
+    }
+
+    function filterReports(q) {
+        const term = q.toLowerCase();
+        return reports.filter(
+            (r) =>
+                (r.reportCode || "").toLowerCase().includes(term) ||
+                (r.diagnosis || "").toLowerCase().includes(term) ||
+                (r.symptoms || "").toLowerCase().includes(term)
+        );
+    }
+
+    // ================= VALIDATION FUNCTIONS =================
+    function containsOnlyNumbers(value) {
+        // Check if value contains only numbers (with optional spaces)
+        return /^\d+$/.test(value.replace(/\s/g, ''));
+    }
+
+    function isNotOnlyNumbers(value) {
+        // Allow empty values for optional fields
+        if (!value || value.trim() === '') return true;
+
+        // Return true if the value contains non-numeric characters
+        return !containsOnlyNumbers(value);
+    }
+
+    function isFutureDate(dateString) {
+        if (!dateString) return true; // Optional field
+
+        const selectedDate = new Date(dateString);
+        const now = new Date();
+
+        return selectedDate > now;
+    }
+
+    function validateField(field, value, validator, errorMessage) {
+        const isValid = validator(value);
+
+        if (isValid) {
+            field.classList.remove('error');
+        } else {
+            field.classList.add('error');
+        }
+
+        return isValid;
+    }
+
+    function validateForm() {
+        let isValid = true;
+
+        // Validate diagnosis (required, cannot be only numbers)
+        const diagnosisValue = diagnosisInput.value.trim();
+        if (!diagnosisValue) {
+            diagnosisField.classList.add('error');
+            document.getElementById('diagnosisError').textContent = 'Diagnosis is required';
+            isValid = false;
+        } else if (!validateField(diagnosisField, diagnosisValue, isNotOnlyNumbers, "Diagnosis cannot contain only numbers")) {
+            isValid = false;
+        }
+
+        // Validate symptoms (optional, but cannot be only numbers if provided)
+        const symptomsValue = symptomsInput.value.trim();
+        if (symptomsValue && !validateField(symptomsField, symptomsValue, isNotOnlyNumbers, "Symptoms cannot contain only numbers")) {
+            isValid = false;
+        }
+
+        // Validate treatment (optional, but cannot be only numbers if provided)
+        const treatmentValue = treatmentInput.value.trim();
+        if (treatmentValue && !validateField(treatmentField, treatmentValue, isNotOnlyNumbers, "Treatment cannot contain only numbers")) {
+            isValid = false;
+        }
+
+        // Validate medications (optional, but cannot be only numbers if provided)
+        const medicationsValue = medicationsInput.value.trim();
+        if (medicationsValue && !validateField(medicationsField, medicationsValue, isNotOnlyNumbers, "Medications cannot contain only numbers")) {
+            isValid = false;
+        }
+
+        // Validate next visit date (optional, but must be in the future if provided)
+        const nextVisitValue = nextVisitInput.value;
+        if (nextVisitValue && !validateField(nextVisitField, nextVisitValue, isFutureDate, "Next visit date must be in the future")) {
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    function clearValidationErrors() {
+        diagnosisField.classList.remove('error');
+        symptomsField.classList.remove('error');
+        treatmentField.classList.remove('error');
+        medicationsField.classList.remove('error');
+        nextVisitField.classList.remove('error');
+
+        // Reset error messages
+        document.getElementById('diagnosisError').textContent = 'Diagnosis cannot contain only numbers';
+    }
+
+    // ================= API HELPERS =================
+    async function api(path, options = {}) {
+        const res = await fetch(BASE_URL + path, {
+            headers: { "Content-Type": "application/json" },
+            ...options,
+        });
+        if (!res.ok) {
+            const msg = await res.text();
+            throw new Error(msg || res.statusText);
+        }
+        const type = res.headers.get("content-type") || "";
+        return type.includes("application/json") ? res.json() : res.text();
+    }
+
+    // ================= API CALLS =================
+    async function loadOwners() {
+        owners = await api("/api/v1/users/owners");
+        ownerSelect.innerHTML =
+            '<option value="">— Select Owner —</option>' +
+            owners.map((o) => `<option value="${o.id}">${o.username}</option>`).join("");
+    }
+
+    async function loadPets(ownerId) {
+        pets = await api(`/api/v1/pets/owner/${ownerId}`);
+        petSelect.innerHTML =
+            '<option value="">— Select Pet —</option>' +
+            pets.map((p) => `<option value="${p.id}">${p.name}</option>`).join("");
+        petSelect.disabled = false;
+    }
+
+    async function loadReportsByPet(petId) {
+        reports = await api(`/api/v1/medical-reports/pet/${petId}`);
+        renderTable(reports);
+    }
+
+    async function createReport(petId, payload) {
+        return api(`/api/v1/medical-reports/create/${petId}/${VET_ID}`, {
+            method: "POST",
+            body: JSON.stringify(payload),
+        });
+    }
+
+    async function updateReport(reportId, payload) {
+        return api(`/api/v1/medical-reports/update/${reportId}/${VET_ID}`, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+        });
+    }
+
+    async function deleteReport(reportId) {
+        return api(`/api/v1/medical-reports/delete/${reportId}/${VET_ID}`, {
+            method: "DELETE",
+        });
+    }
+
+    async function getReportById(id) {
+        return api(`/api/v1/medical-reports/${id}`);
+    }
+
+    // ================= ANNOUNCEMENTS =================
+    async function loadRoleAnnouncements() {
+        try {
+            const res = await fetch(`${BASE_URL}/api/v1/announcements/view-all`);
+            const list = await res.json();
+
+            // Filter announcements that match the role or are for ALL
+            const filtered = list.filter(a =>
+                a.targetRole === "ALL" || a.targetRole === "VETERINARIAN"
+            ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (filtered.length === 0) {
+                announcementList.innerHTML = `<p class="muted">No announcements 🎉</p>`;
+                unreadBadge.style.display = "none";
+                return;
+            }
+
+            // Show unread badge count
+            unreadBadge.textContent = filtered.length;
+            unreadBadge.style.display = "inline-flex";
+
+            // Render list
+            announcementList.innerHTML = filtered.map(a => `
+                <div class="announcement-item">
+                    <strong>${a.title}</strong>
+                    <p>${a.message}</p>
+                    <small>${new Date(a.createdAt).toLocaleString()}</small>
+                </div>
+            `).join("");
+        } catch (err) {
+            console.error("Error loading announcements:", err);
+            announcementList.innerHTML = `<p style="color:var(--danger)">⚠️ Failed to load announcements</p>`;
+        }
+    }
+
+    // ================= RENDER =================
+    function renderTable(list) {
+        tableBody.innerHTML = "";
+        if (!list.length) {
+            const tr = document.createElement("tr");
+            tr.innerHTML =
+                `<td colspan="7" class="center" style="color:var(--muted)">No reports</td>`;
+            tableBody.appendChild(tr);
+            return;
+        }
+        list.forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><span class="tag">${r.reportCode || "—"}</span></td>
+                <td>${r.petName || "—"}</td>
+                <td>${r.ownerName || "—"}</td>
+                <td>${r.diagnosis || "—"}</td>
+                <td>${fmtDate(r.reportDate)}</td>
+                <td>${fmtDate(r.nextVisitDate)}</td>
+                <td class="center">
+                    <div class="row-actions">
+                        <button class="btn" data-action="view" data-id="${r.id}">View</button>
+                        <button class="btn" data-action="edit" data-id="${r.id}">Edit</button>
+                        <button class="btn btn-danger" data-action="delete" data-id="${r.id}">Delete</button>
+                    </div>
+                </td>`;
+            tableBody.appendChild(tr);
+        });
+    }
+
+    // ================= EVENTS =================
+    ownerSelect.addEventListener("change", async (e) => {
+        const ownerId = e.target.value;
+        petSelect.disabled = true;
+        petSelect.innerHTML = '<option value="">— Select Pet —</option>';
+        tableBody.innerHTML = "";
+        reports = [];
+        if (ownerId) {
+            try {
+                await loadPets(ownerId);
+                toast("Pets loaded");
+            } catch (err) {
+                toast(err.message, "error");
+            }
+        }
+        openCreateBtn.disabled = true;
+    });
+
+    petSelect.addEventListener("change", async (e) => {
+        const petId = e.target.value;
+        if (petId) {
+            try {
+                await loadReportsByPet(petId);
+                toast("Reports loaded");
+                openCreateBtn.disabled = false;
+            } catch (err) {
+                toast(err.message, "error");
+            }
+        } else {
+            renderTable([]);
+            openCreateBtn.disabled = true;
+        }
+    });
+
+    refreshBtn.addEventListener("click", async () => {
+        const pid = Number(petSelect.value);
+        if (!pid) return toast("Select a pet first", "error");
+        try {
+            await loadReportsByPet(pid);
+            toast("Refreshed");
+        } catch (err) {
+            toast(err.message, "error");
+        }
+    });
+
+    openCreateBtn.addEventListener("click", () => {
+        editingId = null;
+        modalTitle.textContent = "Create Medical Report";
+        openModal();
+    });
+
+    closeModalBtn.addEventListener("click", closeModal);
+    cancelModalBtn.addEventListener("click", closeModal);
+    closeViewModalBtn.addEventListener("click", closeView);
+    okViewBtn.addEventListener("click", closeView);
+
+    searchBox.addEventListener("input", (e) => {
+        const q = e.target.value.trim();
+        const list = q ? filterReports(q) : reports;
+        renderTable(list);
+    });
+
+    // ====== Table Actions ======
+    tableBody.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const id = btn.getAttribute("data-id");
+        const action = btn.getAttribute("data-action");
+
+        try {
+            if (action === "view") {
+                const r = await getReportById(id);
+                viewContent.innerHTML = `
+                    <div class="grid">
+                        <div class="field"><label>Report Code</label><div class="tag">${r.reportCode}</div></div>
+                        <div class="field"><label>Pet</label><div>${r.petName}</div></div>
+                        <div class="field"><label>Owner</label><div>${r.ownerName}</div></div>
+                        <div class="field col-2"><label>Diagnosis</label><div>${r.diagnosis}</div></div>
+                        <div class="field col-2"><label>Symptoms</label><div>${r.symptoms || "—"}</div></div>
+                        <div class="field col-2"><label>Treatment</label><div>${r.treatment || "—"}</div></div>
+                        <div class="field col-2"><label>Medications</label><div>${r.medications || "—"}</div></div>
+                        <div class="field col-2"><label>Notes</label><div>${r.notes || "—"}</div></div>
+                        <div class="field"><label>Report Date</label><div>${fmtDate(r.reportDate)}</div></div>
+                        <div class="field"><label>Next Visit</label><div>${fmtDate(r.nextVisitDate)}</div></div>
+                        <div class="field"><label>Veterinarian</label><div>${r.veterinarianName || "—"}</div></div>
+                    </div>`;
+                openView();
+            }
+
+            if (action === "edit") {
+                const r = await getReportById(id);
+                editingId = r.id;
+                modalTitle.textContent = `Edit Report — ${r.reportCode || r.id}`;
+                reportForm.diagnosis.value = r.diagnosis || "";
+                reportForm.symptoms.value = r.symptoms || "";
+                reportForm.treatment.value = r.treatment || "";
+                reportForm.medications.value = r.medications || "";
+                reportForm.notes.value = r.notes || "";
+                reportForm.nextVisitDate.value = r.nextVisitDate
+                    ? new Date(r.nextVisitDate).toISOString().slice(0, 16)
+                    : "";
+                openModal();
+            }
+
+            if (action === "delete") {
+                if (!confirm("Delete this report?")) return;
+                await deleteReport(id);
+                toast("Deleted");
+                const pid = Number(petSelect.value);
+                if (pid) await loadReportsByPet(pid);
+            }
+        } catch (err) {
+            toast(err.message, "error");
+        }
+    });
+
+    // ====== CREATE / UPDATE SUBMIT ======
+    reportForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const pid = Number(petSelect.value);
+        if (!pid) return toast("Select a pet first", "error");
+
+        // Validate form before submission
+        if (!validateForm()) {
+            toast("Please fix validation errors before submitting", "error");
+            return;
+        }
+
+        const payload = {
+            diagnosis: reportForm.diagnosis.value.trim(),
+            symptoms: reportForm.symptoms.value.trim(),
+            treatment: reportForm.treatment.value.trim(),
+            medications: reportForm.medications.value.trim(),
+            notes: reportForm.notes.value.trim(),
+            nextVisitDate: reportForm.nextVisitDate.value
+                ? new Date(reportForm.nextVisitDate.value).toISOString()
+                : null,
+        };
+
+        try {
+            if (editingId) {
+                await updateReport(editingId, payload);
+                toast("Report updated");
+            } else {
+                await createReport(pid, payload);
+                toast("Report created");
+            }
+            closeModal();
+            await loadReportsByPet(pid);
+        } catch (err) {
+            toast(err.message, "error");
+        }
+    });
+
+    // ====== VET ID SAVE ======
+    saveVetIdBtn.addEventListener("click", () => {
+        const id = Number(vetIdInput.value);
+        if (!id) return toast("Enter valid Vet ID", "error");
+        VET_ID = id;
+        toast("Vet ID set to " + VET_ID);
+    });
+
+    // ====== ANNOUNCEMENTS ======
+    announcementBtn.addEventListener("click", () => {
+        const visible = announcementDropdown.classList.toggle("active");
+        if (visible) loadRoleAnnouncements();
+    });
+
+    closeAnnouncements.addEventListener("click", () => {
+        announcementDropdown.classList.remove("active");
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+        if (!announcementDropdown.contains(e.target) && !announcementBtn.contains(e.target)) {
+            announcementDropdown.classList.remove("active");
+        }
+    });
+
+    // ====== REAL-TIME VALIDATION ======
+    diagnosisInput.addEventListener('blur', () => {
+        const value = diagnosisInput.value.trim();
+        if (!value) {
+            diagnosisField.classList.add('error');
+            document.getElementById('diagnosisError').textContent = 'Diagnosis is required';
+        } else {
+            validateField(diagnosisField, value, isNotOnlyNumbers, "Diagnosis cannot contain only numbers");
+        }
+    });
+
+    symptomsInput.addEventListener('blur', () => {
+        validateField(symptomsField, symptomsInput.value.trim(), isNotOnlyNumbers, "Symptoms cannot contain only numbers");
+    });
+
+    treatmentInput.addEventListener('blur', () => {
+        validateField(treatmentField, treatmentInput.value.trim(), isNotOnlyNumbers, "Treatment cannot contain only numbers");
+    });
+
+    medicationsInput.addEventListener('blur', () => {
+        validateField(medicationsField, medicationsInput.value.trim(), isNotOnlyNumbers, "Medications cannot contain only numbers");
+    });
+
+    nextVisitInput.addEventListener('blur', () => {
+        validateField(nextVisitField, nextVisitInput.value, isFutureDate, "Next visit date must be in the future");
+    });
+
+    // ====== INIT ======
+    (async function init() {
+        try {
+            await loadOwners();
+            await loadRoleAnnouncements();
+            toast("Dashboard loaded");
+        } catch (err) {
+            toast(err.message, "error");
+        }
+    })();
+</script>
+</body>
+</html>

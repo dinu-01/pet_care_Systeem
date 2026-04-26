@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Happy Paws – Shop Keeper Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#0b1020;--card:#121935;--primary:#7c5cff;--accent:#00d3a7;
+            --warn:#ffb020;--bad:#ff5c7a;--good:#10b981;--text:#e8ecf3;
+            --muted:#9aa3b2;--border:#243057;--ring:rgba(124,92,255,.35)
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;font-family:"Inter",sans-serif;color:var(--text);
+            background:
+                    radial-gradient(1000px 600px at 20% -10%,#1b2350 0%,transparent 60%),
+                    radial-gradient(1000px 600px at 90% 0%,#13234a 0%,transparent 60%),var(--bg);
+            min-height:100vh;
+        }
+        /* ===== 🔔 Announcement Button ===== */
+        .tool {
+            position: relative;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: var(--text);
+            transition: background 0.25s ease, transform 0.2s ease;
+            z-index: 100100;
+        }
+        .tool:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.05);
+        }
+        .tool i { font-size: 17px; }
+
+        /* 🔴 Unread Badge */
+        .unread-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: var(--bad);
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 6px rgba(255, 92, 122, 0.5);
+        }
+
+        /* ===== 🔔 Announcement Dropdown ===== */
+        .announcement-dropdown {
+            position: absolute; /* 🔧 absolute within header */
+            top: 48px; /* distance below the bell button */
+            right: 0; /* align perfectly under bell */
+            width: 320px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeDown 0.25s ease-out;
+            z-index: 10009; /* stays above everything else */
+        }
+        .announcement-dropdown.active { display: flex; }
+
+        .announcement-dropdown::before {
+            /* little arrow pointing to bell */
+            content: "";
+            position: absolute;
+            top: -7px;
+            right: 14px;
+            width: 12px;
+            height: 12px;
+            background: var(--card);
+            border-left: 1px solid var(--border);
+            border-top: 1px solid var(--border);
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        .announcement-dropdown .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0));
+        }
+        .announcement-dropdown .head h3 {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .announcement-dropdown .head button {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .announcement-dropdown .head button:hover { color: var(--primary); }
+
+        .announcement-dropdown .content {
+            display: grid;
+            gap: 10px;
+            padding: 10px 14px;
+            max-height: 260px;
+            overflow-y: auto;
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        }
+        .announcement-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(14, 22, 49, 0.8);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+            display: grid;
+            gap: 4px;
+            transition: background 0.25s ease, transform 0.25s ease;
+        }
+        .announcement-item:hover {
+            background: rgba(14, 22, 49, 0.95);
+            transform: translateY(-2px);
+        }
+        .announcement-item strong { color: var(--primary); }
+        .announcement-item p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+        .announcement-item small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* Smooth drop animation */
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+
+        .container{max-width:1280px;margin:24px auto;padding:0 16px}
+        header{
+            display:flex;justify-content:space-between;align-items:center;
+            padding:14px 18px;border:1px solid var(--border);border-radius:14px;
+            background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01));
+            backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.3);
+        }
+        h1{margin:0;font-size:20px}
+        .muted{color:var(--muted);font-size:13px}
+        .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+        .btn{
+            border:none;border-radius:10px;padding:10px 14px;cursor:pointer;
+            font-weight:600;font-size:14px;transition:.2s;
+            background:#16214a;color:var(--text);border:1px solid var(--border);
+        }
+        .btn:hover{filter:brightness(1.05)}
+        .btn-primary{background:linear-gradient(90deg,var(--primary),var(--accent));border:none;color:#fff}
+        .btn-danger{background:linear-gradient(90deg,#ff5c7a,#ff7fa0);border:none;color:#fff}
+        input,select,textarea{
+            background:#0e1631;border:1px solid var(--border);color:var(--text);
+            border-radius:10px;padding:10px 12px;outline:none;transition:.2s;
+        }
+        input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--ring)}
+        .grid{display:grid;grid-template-columns:320px 1fr;gap:16px;margin-top:16px}
+        .card{
+            background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+            border:1px solid var(--border);border-radius:16px;padding:16px;
+            box-shadow:0 8px 24px rgba(0,0,0,.25);
+            z-index: -10000;
+        }
+        .card h2{margin:0 0 8px;font-size:18px}
+        label{display:block;margin-bottom:6px;font-size:13px;color:var(--muted)}
+        .controls{display:grid;gap:10px}
+        .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:12px
+
+       }
+        table{width:100%;border-collapse:collapse;font-size:14px}
+        th,td{padding:10px;border-bottom:1px solid var(--border)}
+        th{position:sticky;top:0;background:#0f1837;text-align:left}
+        .tag{font-size:12px;padding:2px 8px;border-radius:999px;background:#142152;border:1px solid #2a3c7a}
+        .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .status{font-weight:700}
+        .status.AVAILABLE{color:var(--good)}
+        .status.OUT_OF_STOCK{color:#ffb4b4}
+        .status.DISCONTINUED{color:#c7c9d1}
+        .status.ON_SALE{color:#ffd399}
+        .thumb{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid var(--border);background:#0e1631}
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+        .stat{background:linear-gradient(90deg,var(--primary),var(--accent));
+            color:#fff;border-radius:12px;padding:12px;font-weight:600;text-align:center;
+            box-shadow:0 6px 18px rgba(0,0,0,.25)}
+        .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+            background:rgba(5,8,20,.55);backdrop-filter:blur(3px);z-index:20}
+        .modal[aria-hidden="false"]{display:flex}
+        .dialog{width:min(740px,94vw);border:1px solid var(--border);
+            border-radius:16px;overflow:hidden;background:#0f1837}
+        .modal-header,.modal-footer{display:flex;align-items:center;justify-content:space-between;
+            padding:12px 16px;border-bottom:1px solid var(--border)}
+        .modal-footer{border-bottom:none;border-top:1px solid var(--border)}
+        .modal-body{padding:16px}
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .col-2{grid-column:1/-1}
+        #toast{position:fixed;bottom:16px;right:16px;display:grid;gap:8px;z-index:30}
+        .toast{background:#0e1631;border:1px solid var(--border);color:var(--text);
+            padding:10px 12px;border-radius:10px;box-shadow:0 10px 24px rgba(0,0,0,.35);animation:slideIn .25s ease-out}
+        .toast.success{border-color:#1e9d7a}.toast.error{border-color:#cc3b5a}
+        @keyframes slideIn{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- HEADER -->
+    <header>
+        <div>
+            <h1>🐾 Shop Keeper Dashboard</h1>
+            <div class="muted">Manage your products • Add / Edit / Stock / Sales • Stats</div>
+        </div>
+        <div class="row">
+            <div id="shopKeeperInfo" class="muted"></div>
+            <button id="newProductBtn" class="btn btn-primary">+ New Product</button>
+            <!-- 🔔 Announcement Icon -->
+            <div class="tool" id="announcementBtn" title="Announcements">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <!-- 🔔 Announcement Dropdown -->
+            <div class="announcement-dropdown" id="announcementDropdown">
+                <div class="head">
+                    <h3><i class="fa-solid fa-bullhorn"></i> Announcements</h3>
+                    <button id="closeAnnouncements">&times;</button>
+                </div>
+                <div class="content" id="announcementList">
+                    <p>No new announcements 🎉</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid">
+        <!-- LEFT -->
+        <aside class="card">
+            <h2>Filters & Tools</h2>
+            <div class="controls">
+                <div>
+                    <label for="viewMode">View</label>
+                    <select id="viewMode">
+                        <option value="my">My Products</option>
+                        <option value="all">All Products</option>
+                        <option value="available">Available Only</option>
+                        <option value="onsale">On Sale</option>
+                        <option value="low">Low Stock ≤ 10</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="searchBox">Search Name</label>
+                    <input id="searchBox" placeholder="e.g. shampoo, toy…" />
+                </div>
+                <div class="row" style="gap:8px">
+                    <div style="flex:1">
+                        <label for="categoryFilter">Category</label>
+                        <select id="categoryFilter">
+                            <option value="">All</option>
+                            <option>FOOD</option><option>TOYS</option><option>GROOMING</option>
+                            <option>HEALTHCARE</option><option>ACCESSORIES</option>
+                            <option>BEDDING</option><option>TRAINING</option><option>OTHER</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label for="statusFilter">Status</label>
+                        <select id="statusFilter">
+                            <option value="">All</option>
+                            <option>AVAILABLE</option><option>OUT_OF_STOCK</option>
+                            <option>DISCONTINUED</option><option>ON_SALE</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row" style="gap:8px">
+                    <div style="flex:1">
+                        <label for="sortPrice">Sort by Price</label>
+                        <select id="sortPrice">
+                            <option value="">—</option>
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                    <div class="row" style="gap:8px">
+                        <button id="refreshBtn" class="btn">Refresh</button>
+                        <button id="exportBtn" class="btn">Export JSON</button>
+                    </div>
+                </div>
+                <div>
+                    <label>Category Stats</label>
+                    <div id="stats" class="stats"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- RIGHT -->
+        <section>
+            <div class="card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                    <strong>Products</strong>
+                    <div class="muted">Edit • Stock • Mark Sale • Delete</div>
+                </div>
+                <div class="muted" id="resultCount"></div>
+            </div>
+            <div class="table-wrap">
+                <table id="tbl">
+                    <thead>
+                    <tr>
+                        <th>Img</th><th>Name</th><th>Brand</th><th>Category</th>
+                        <th>Price</th><th>Stock</th><th>Status</th><th>ShopKeeper</th><th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="productModal" aria-hidden="true">
+    <div class="dialog">
+        <div class="modal-header">
+            <h3 id="modalTitle">Create Product</h3>
+            <button class="btn" id="closeModal">✕</button>
+        </div>
+        <form id="productForm" class="modal-body">
+            <div class="grid-2">
+                <div><label>Name *</label><input name="name" required /></div>
+                <div><label>Brand</label><input name="brand" /></div>
+                <div><label>Price (LKR) *</label><input name="price" type="number" min="0" step="0.01" required /></div>
+                <div><label>Initial Stock *</label><input name="stockQuantity" type="number" min="0" required /></div>
+                <div>
+                    <label>Category *</label>
+                    <select name="productCategory" required>
+                        <option>FOOD</option><option>TOYS</option><option>GROOMING</option>
+                        <option>HEALTHCARE</option><option>ACCESSORIES</option>
+                        <option>BEDDING</option><option>TRAINING</option><option>OTHER</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Status</label>
+                    <select name="status">
+                        <option>AVAILABLE</option><option>OUT_OF_STOCK</option>
+                        <option>DISCONTINUED</option><option>ON_SALE</option>
+                    </select>
+                </div>
+                <div class="col-2"><label>Image URL</label><input name="imageUrl" placeholder="https://..." /></div>
+                <div class="col-2"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" id="cancelModal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+    <script>
+        /* ===== CONFIG & USER LOAD ===== */
+        const BASE_URL = "http://localhost:8080";
+        let EDIT_ID = null;
+
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser || currentUser.role !== "SHOP_KEEPER") {
+        alert("Access Denied – Please Login as Shop Keeper");
+        window.location.href = "login.html";
+    }
+        const SHOP_ID = currentUser.id;
+        const SHOP_NAME = currentUser.username || currentUser.email.split("@")[0];
+        const SHOP_EMAIL = currentUser.email;
+        document.getElementById("shopKeeperInfo").innerHTML =
+        `<strong>${SHOP_NAME}</strong> <span className="muted">(${SHOP_EMAIL})</span>`;
+
+        /* ===== ELEMENTS ===== */
+        const newProductBtn = document.getElementById("newProductBtn"),
+        viewModeSel = document.getElementById("viewMode"),
+        searchBox = document.getElementById("searchBox"),
+        categoryFilter = document.getElementById("categoryFilter"),
+        statusFilter = document.getElementById("statusFilter"),
+        sortPrice = document.getElementById("sortPrice"),
+        refreshBtn = document.getElementById("refreshBtn"),
+        exportBtn = document.getElementById("exportBtn"),
+        statsBox = document.getElementById("stats"),
+        tblBody = document.querySelector("#tbl tbody"),
+        resultCount = document.getElementById("resultCount"),
+        productModal = document.getElementById("productModal"),
+        modalTitle = document.getElementById("modalTitle"),
+        closeModalBtn = document.getElementById("closeModal"),
+        cancelModalBtn = document.getElementById("cancelModal"),
+        productForm = document.getElementById("productForm"),
+        toastRoot = document.getElementById("toast");
+
+        /* ===== HELPERS ===== */
+        function toast(msg, type = "success") {
+        const el = document.createElement("div");
+        el.className = `toast ${type}`;
+        el.textContent = msg;
+        toastRoot.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
+    }
+
+        async function api(path, opt = {}) {
+        try {
+        const res = await fetch(BASE_URL + path, {
+        headers: {"Content-Type": "application/json"},
+        ...opt,
+    });
+        if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || `HTTP ${res.status}: ${res.statusText}`);
+    }
+        const ct = res.headers.get("content-type") || "";
+        return ct.includes("application/json") ? res.json() : res.text();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+    }
+
+        function openModal() {
+        productModal.setAttribute("aria-hidden", "false");
+    }
+
+        function closeModal() {
+        productModal.setAttribute("aria-hidden", "true");
+        productForm.reset();
+        EDIT_ID = null;
+    }
+
+        function fmt(n) {
+        return Number(n).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+    }
+
+        function esc(s) {
+        return String(s || "").replace(/[&<>"']/g, (c) =>
+        ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c])
+        );
+    }
+
+        /* ✅ IMPROVED IMAGE HANDLING - FIXED DEFAULT IMAGES */
+        function getProductImageUrl(product) {
+        // If product has a valid image URL, use it
+        if (product.imageUrl && isValidImageUrl(product.imageUrl)) {
+        return product.imageUrl;
+    }
+
+        // Fallback to category-based default images
+        return getDefaultProductImage(product.productCategory);
+    }
+
+        function isValidImageUrl(url) {
+        if (!url || typeof url !== 'string') return false;
+
+        // Check if it's a valid URL format
+        try {
+        const parsedUrl = new URL(url);
+        const validProtocols = ['http:', 'https:'];
+        if (!validProtocols.includes(parsedUrl.protocol)) return false;
+
+        // Check common image file extensions
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+        const pathname = parsedUrl.pathname.toLowerCase();
+        return imageExtensions.some(ext => pathname.endsWith(ext));
+    } catch {
+        return false;
+    }
+    }
+
+        function getDefaultProductImage(category) {
+        const defaultImages = {
+
+    };
+        return defaultImages[category] || defaultImages['OTHER'];
+    }
+
+        function handleImageError(img, category) {
+        console.warn('Image failed to load, using default:', img.src);
+        img.src = getDefaultProductImage(category);
+        img.onerror = null; // Prevent infinite loop
+    }
+
+        /* ===== LOAD STATS ===== */
+        async function loadStats() {
+        try {
+        const data = await api("/api/v1/product/stats/category-count");
+        const entries = Object.entries(data);
+        statsBox.innerHTML = "";
+        if (!entries.length) {
+        statsBox.innerHTML = `<div class="muted">No data</div>`;
+        return;
+    }
+        entries.forEach(([k, v]) => {
+        const d = document.createElement("div");
+        d.className = "stat";
+        d.innerHTML = `${esc(k)}<br>${v}`;
+        statsBox.appendChild(d);
+    });
+    } catch (err) {
+        toast(err.message, "error");
+    }
+    }
+
+        /* ===== LOAD PRODUCTS ===== */
+        async function loadProducts() {
+        try {
+        let list = [];
+        const mode = viewModeSel.value,
+        name = searchBox.value.trim(),
+        cat = categoryFilter.value,
+        stat = statusFilter.value,
+        sort = sortPrice.value;
+
+        if (mode === "my")
+        list = await api(`/api/v1/product/shop-keeper/${SHOP_ID}`);
+        else if (mode === "all") list = await api("/api/v1/product/all");
+        else if (mode === "available") list = await api("/api/v1/product/available");
+        else if (mode === "onsale") list = await api("/api/v1/product/on-sale");
+        else if (mode === "low")
+        list = await api("/api/v1/product/low-stock?threshold=10");
+
+        if (sort) {
+        list = list.sort((a, b) =>
+        sort === "asc" ? a.price - b.price : b.price - a.price
+        );
+    }
+
+        if (name) {
+        const t = name.toLowerCase();
+        list = list.filter((p) => (p.name || "").toLowerCase().includes(t));
+    }
+        if (cat) list = list.filter((p) => p.productCategory === cat);
+        if (stat) list = list.filter((p) => p.status === stat);
+
+        renderTable(list);
+    } catch (err) {
+        toast(err.message, "error");
+    }
+    }
+
+        /* ===== RENDER TABLE - FIXED IMAGE DISPLAY ===== */
+        function renderTable(list) {
+        tblBody.innerHTML = "";
+        resultCount.textContent = `${list.length} item(s)`;
+        if (!list.length) {
+        tblBody.innerHTML = `<tr><td colspan="9" class="muted">No products</td></tr>`;
+        return;
+    }
+
+        list.forEach((p) => {
+        const tr = document.createElement("tr");
+        const imageUrl = getProductImageUrl(p);
+        const category = p.productCategory || 'OTHER';
+
+        tr.innerHTML = `
+      <td>
+        <img class="thumb"
+             src="${esc(imageUrl)}"
+             alt="${esc(p.name)}"
+             onerror="handleImageError(this, '${category}')">
+      </td>
+      <td>
+        <div style="font-weight:600">${esc(p.name)}</div>
+        <div class="muted" style="max-width:320px">${esc(p.description || "")}</div>
+      </td>
+      <td>${esc(p.brand || "—")}</td>
+      <td><span class="tag">${esc(p.productCategory || "—")}</span></td>
+      <td>LKR ${fmt(p.price || 0)}</td>
+      <td>${p.stockQuantity ?? 0}</td>
+      <td><span class="status ${esc(p.status)}">${esc(p.status)}</span></td>
+      <td>${SHOP_NAME}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn" data-a="edit" data-id="${p.id}">Edit</button>
+          <button class="btn btn-danger" data-a="del" data-id="${p.id}">Delete</button>
+        </div>
+      </td>`;
+        tblBody.appendChild(tr);
+    });
+    }
+
+        /* ===== MODAL LOGIC ===== */
+        function openCreateModal() {
+        EDIT_ID = null;
+        modalTitle.textContent = "Create Product";
+        productForm.reset();
+        openModal();
+    }
+
+        function openEditModal(p) {
+        modalTitle.textContent = `Edit Product — ${p.name}`;
+        EDIT_ID = p.id;
+
+        // Fill form with product data
+        Object.entries(p).forEach(([k, v]) => {
+        if (productForm[k]) {
+        productForm[k].value = v ?? "";
+    }
+    });
+
+        openModal();
+    }
+
+        /* ✅ URL VALIDATION HELPER */
+        function isValidUrl(str) {
+        if (!str) return true;
+        try {
+        const url = new URL(str);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+        return false;
+    }
+    }
+
+        /* ===== FORM SUBMIT ===== */
+        productForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        try {
+        const payload = {
+        name: productForm.name.value.trim(),
+        brand: productForm.brand.value.trim(),
+        price: Number(productForm.price.value),
+        stockQuantity: Number(productForm.stockQuantity.value),
+        productCategory: productForm.productCategory.value,
+        status: productForm.status.value,
+        imageUrl: productForm.imageUrl.value.trim(),
+        description: productForm.description.value.trim(),
+    };
+
+        if (!payload.name || payload.price <= 0)
+        return toast("⚠️ Please fill all required fields correctly", "error");
+
+        if (payload.imageUrl && !isValidUrl(payload.imageUrl))
+        return toast("❌ Invalid image URL format (must start with http/https)", "error");
+
+        if (payload.imageUrl.length > 1000)
+        return toast("❌ Image URL too long (max 1000 characters)", "error");
+
+        if (EDIT_ID) {
+        await api(`/api/v1/product/update/${EDIT_ID}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+    });
+        toast("✅ Product updated");
+    } else {
+        await api(`/api/v1/product/create/${SHOP_ID}`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
+        toast("✅ Product created");
+    }
+
+        closeModal();
+        loadProducts();
+        loadStats();
+    } catch (err) {
+        toast(err.message, "error");
+    }
+    });
+
+        /* ===== ACTION BUTTONS ===== */
+        tblBody.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.a;
+        try {
+        if (action === "edit") {
+        const product = await api(`/api/v1/product/${id}`);
+        openEditModal(product);
+    }
+
+        if (action === "del") {
+        if (!confirm("🗑️ Are you sure you want to permanently delete this product?")) return;
+
+        await api(`/api/v1/product/delete/${id}`, {method: "DELETE"});
+
+        toast("🗑️ Product deleted successfully");
+
+        // Remove from UI instantly
+        btn.closest("tr").remove();
+        loadStats();
+        resultCount.textContent = `${tblBody.querySelectorAll("tr").length} item(s)`;
+    }
+    } catch (err) {
+        toast(err.message, "error");
+    }
+    });
+
+        /* ===== BUTTONS ===== */
+        newProductBtn.addEventListener("click", openCreateModal);
+        closeModalBtn.addEventListener("click", closeModal);
+        cancelModalBtn.addEventListener("click", closeModal);
+        refreshBtn.addEventListener("click", () => loadProducts());
+        exportBtn.addEventListener("click", () => {
+        const rows = Array.from(tblBody.querySelectorAll("tr")).map((tr) => {
+        const tds = tr.querySelectorAll("td");
+        return {
+        name: tds[1]?.innerText.split("\n")[0] || "",
+        brand: tds[2]?.innerText || "",
+        category: tds[3]?.innerText || "",
+        price: tds[4]?.innerText || "",
+        stock: tds[5]?.innerText || "",
+        status: tds[6]?.innerText || "",
+    };
+    });
+        const blob = new Blob([JSON.stringify(rows, null, 2)], {
+        type: "application/json",
+    });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "products_export.json";
+        a.click();
+        URL.revokeObjectURL(a.href);
+    });
+
+        /* ===== FILTERS ===== */
+        [viewModeSel, searchBox, categoryFilter, statusFilter, sortPrice].forEach((el) => {
+        el.addEventListener("change", loadProducts);
+        if (el === searchBox) el.addEventListener("input", loadProducts);
+    });
+
+        /* ===== INIT ===== */
+        (async function () {
+        await loadStats();
+        await loadProducts();
+    })();
+        // ======================================================
+        // 🐾 ROLE-BASED ANNOUNCEMENTS FETCHER (User Dashboard)
+        // ======================================================
+        const ANNOUNCEMENT_URL = "http://localhost:8080/api/v1/announcements/view-all";
+        const announcementDropdown = document.getElementById("announcementDropdown");
+        const announcementBtn = document.getElementById("announcementBtn");
+        const announcementList = document.getElementById("announcementList");
+        const closeAnnouncements = document.getElementById("closeAnnouncements");
+        const unreadBadge = document.createElement("span");
+
+        unreadBadge.className = "unread-badge";
+        announcementBtn.appendChild(unreadBadge);
+
+        async function loadRoleAnnouncements() {
+            const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+            if (!currentUser) return;
+
+            const userRole = currentUser.role; // e.g. PET_OWNER / SHOP_KEEPER / VETERINARIAN
+            try {
+                const res = await fetch(ANNOUNCEMENT_URL);
+                const list = await res.json();
+
+                // Filter announcements that match the role or are for ALL
+                const filtered = list.filter(a =>
+                    a.targetRole === "ALL" || a.targetRole === userRole
+                ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                if (filtered.length === 0) {
+                    announcementList.innerHTML = `<p class="muted">No announcements 🎉</p>`;
+                    unreadBadge.style.display = "none";
+                    return;
+                }
+
+                // Show unread badge count
+                unreadBadge.textContent = filtered.length;
+                unreadBadge.style.display = "inline-flex";
+
+                // Render list
+                announcementList.innerHTML = filtered.map(a => `
+      <div class="announcement-item">
+        <strong>${a.title}</strong>
+        <p>${a.message}</p>
+        <small>${new Date(a.createdAt).toLocaleString()}</small>
+      </div>
+    `).join("");
+            } catch (err) {
+                console.error("Error loading announcements:", err);
+                announcementList.innerHTML = `<p style="color:var(--error)">⚠️ Failed to load announcements</p>`;
+            }
+        }
+
+        // Toggle dropdown
+        announcementBtn.addEventListener("click", () => {
+            const visible = announcementDropdown.classList.toggle("active");
+            if (visible) loadRoleAnnouncements();
+        });
+
+        // Close dropdown
+        closeAnnouncements.addEventListener("click", () => {
+            announcementDropdown.classList.remove("active");
+        });
+
+        // Close on outside click
+        document.addEventListener("click", (e) => {
+            if (!announcementDropdown.contains(e.target) && !announcementBtn.contains(e.target)) {
+                announcementDropdown.classList.remove("active");
+            }
+        });
+
+
+        // Make helper functions available globally for image error handling
+        window.handleImageError = handleImageError;
+        window.getDefaultProductImage = getDefaultProductImage;
+</script>
+
+</body>
+</html>

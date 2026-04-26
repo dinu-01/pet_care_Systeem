@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Happy Paws • Medical Reports</title>
+
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+    <style>
+        :root {
+            --bg:#f3f6fb; --panel:#ffffff; --text:#0f172a; --muted:#6b7280; --border:rgba(15,23,42,.1);
+            --primary:#6d5dfc; --secondary:#22c55e; --success:#10b981; --warning:#f59e0b; --error:#ef4444;
+            --card-shadow:0 12px 32px rgba(2,6,23,.08);
+            --radius:16px; --dur:360ms; --easing:cubic-bezier(.2,.8,.2,1);
+        }
+        [data-theme="dark"] {
+            --bg:#0b1020; --panel:#111831; --text:#e8ecf3; --muted:#9aa3b2; --border:rgba(255,255,255,.08);
+            --primary:#7c5cff; --secondary:#22c55e; --card-shadow:0 12px 36px rgba(0,0,0,.35);
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{
+            font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+            color:var(--text);
+            background:
+                    radial-gradient(1200px 600px at -10% -10%, rgba(124,92,255,0.12), transparent 40%),
+                    radial-gradient(1000px 700px at 110% 20%, rgba(34,197,94,0.12), transparent 35%),
+                    var(--bg);
+            line-height:1.35;
+            transition:background .4s ease,color .4s ease;
+        }
+        /* ===== Background Video ===== */
+        #bgVideo {
+            position:fixed;top:0;left:0;width:100%;height:100%;
+            object-fit:cover;z-index:-1;
+            opacity:.35;filter:brightness(.85);
+            transition:opacity .8s ease;
+        }
+        [data-theme="dark"] #bgVideo{opacity:.25;filter:brightness(.6)}
+
+        .dashboard-container{display:grid;grid-template-columns:280px 1fr;min-height:100vh;}
+
+        /* Sidebar */
+        /* ===== Sidebar ===== */
+        .sidebar{
+            position:sticky; top:0; height:100vh;
+            background:
+                    linear-gradient(180deg, rgba(124,92,255,.18), rgba(34,197,94,.18)),
+                    linear-gradient(160deg, var(--primary), var(--secondary));
+            color:#fff; padding:24px 18px; display:flex; flex-direction:column; gap:22px;
+        }
+        .brand{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);animation:pop-in var(--dur) var(--easing) both}
+        .brand i{font-size:22px}
+        .brand h2{font-size:18px;font-weight:800;letter-spacing:.2px}
+        .sidebar small{opacity:.95}
+        .sidebar-menu{list-style:none;display:grid;gap:6px;margin-top:8px}
+        .sidebar-menu a{
+            color:#fff;text-decoration:none;display:flex;align-items:center;gap:12px;
+            padding:12px 14px;border-radius:12px;transition:transform .22s var(--easing), background .22s var(--easing)
+        }
+        .sidebar-menu a i{width:22px;text-align:center;opacity:.95}
+        .sidebar-menu a:hover{transform:translateX(4px);background:rgba(255,255,255,.16)}
+        .sidebar-menu a.active{background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+        .sidebar-footer{margin-top:auto;display:grid;gap:10px}
+        .btn{
+            border:none;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer;
+            transition:transform .22s var(--easing)
+        }
+        .btn:hover{transform:translateY(-2px)}
+        .btn-ghost{background:#fff; color:#111}
+        .collapse-toggle{
+            position:absolute; top:16px; right:-14px; width:36px; height:36px; display:grid; place-items:center;
+            background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:50%;
+            box-shadow:var(--card-shadow); cursor:pointer; z-index:3;
+        }
+        /* Main */
+        .main-content{padding:26px min(4vw,36px);display:grid;gap:22px;animation:fade-in var(--dur) var(--easing);padding-top:10px!important;}
+        .header{display:flex;justify-content:space-between;align-items:center;}
+        .title h1{font-size:clamp(20px,2.4vw,28px);font-weight:800;}
+        .user-info{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:10px 12px;box-shadow:var(--card-shadow);}
+        .user-avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(140deg,var(--primary),var(--secondary));color:#fff;font-weight:800;}
+        .user-meta small{color:var(--muted);}
+
+        /* Card/Table */
+        .card{
+            background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+            box-shadow:var(--card-shadow);overflow:hidden;animation:slide-up .7s ease-out both;
+            margin-top:-10px;
+        }
+        .card-header{padding:18px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+        .card-header h2{font-size:1.05rem;font-weight:800;}
+        .table-wrap{padding:14px;}
+        .thead{display:grid;grid-template-columns:.8fr 1fr 1fr 1fr 1fr .8fr;gap:10px;padding:0 6px 6px;color:var(--muted);font-weight:700;font-size:.87rem;}
+        .row{display:grid;grid-template-columns:.8fr 1fr 1fr 1fr 1fr .8fr;gap:10px;padding:12px;align-items:center;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 20px rgba(2,6,23,.08);transform:translateY(8px);opacity:0;animation:slide-up var(--dur) var(--easing) forwards;}
+        .tag{background:#eef2ff10;color:var(--primary);padding:6px 10px;border:1px solid var(--border);border-radius:999px;font-size:.75rem;font-weight:800;}
+        .view-btn{
+            background:linear-gradient(135deg,var(--primary),#a855f7);color:#fff;border:none;
+            padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:800;transition:.22s var(--easing);
+        }
+        .view-btn:hover{filter:brightness(1.05);transform:translateY(-2px);}
+
+        /* Modal */
+        .modal{
+            position:fixed;inset:0;background:rgba(0,0,0,.45);
+            display:none;align-items:center;justify-content:center;z-index:20;padding:18px;
+        }
+        .modal[aria-hidden="false"]{display:flex;animation:fade-in var(--dur) var(--easing) both;}
+        .modal-content{
+            background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;
+            max-width:560px;width:100%;box-shadow:var(--card-shadow);transform:translateY(10px);opacity:0;animation:slide-up var(--dur) var(--easing) forwards;
+        }
+        .modal-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:10px;}
+        .modal-header h3{font-size:1.05rem;font-weight:800;}
+        .close-btn{background:none;border:none;font-size:1.3rem;color:var(--text);cursor:pointer;}
+
+        @keyframes fade-in{from{opacity:0}to{opacity:1}}
+        @keyframes slide-up{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+        @media(max-width:1100px){.dashboard-container{grid-template-columns:84px 1fr}.sidebar .label{display:none}.brand h2,.sidebar small{display:none}}
+        @media(max-width:860px){.thead,.row{grid-template-columns:1fr 1fr 1fr 1fr 1fr}.hide-md{display:none}}
+        @media(max-width:720px){.dashboard-container{grid-template-columns:1fr}.sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;transform:translateX(-100%);transition:transform var(--dur) var(--easing);z-index:1001}.sidebar.open{transform:translateX(0)}.collapse-toggle{top:16px;left:16px;right:auto}.thead{display:none}.row{grid-template-columns:1fr;gap:8px}}
+    </style>
+</head>
+<body>
+<!-- Background video -->
+<video autoplay muted loop playsinline id="bgVideo">
+    <source src="videos/petcare1.mp4" type="video/mp4">
+</video>
+<div class="dashboard-container">
+    <nav class="sidebar" id="sidebar">
+        <button class="collapse-toggle" id="toggleSidebar" title="Menu"><i class="fa-solid fa-bars"></i></button>
+        <div class="brand"><i class="fa-solid fa-paw"></i><h2>Happy Paws</h2></div>
+        <small>Pet Owner Dashboard</small>
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="pet.html"><i class="fas fa-paw"></i> My Pets</a></li>
+            <li><a href="AppimentManage.html"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="owner_medical_reports.html" class="active"><i class="fas fa-file-medical"></i> Medical Reports</a></li>
+            <li><a href="owner_grooming_reports.html"><i class="fas fa-scissors"></i> Grooming Records</a></li>
+            <li><a href="product.html"><i class="fas fa-shopping-cart"></i> Pet Shop</a></li>
+            <li><a href="index.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="btn-theme-modern" id="themeToggle">
+                <i class="fa-solid fa-moon"></i> Toggle Theme
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="header">
+            <div class="title"><h1>Medical Reports</h1></div>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">PO</div>
+                <div class="user-meta">
+                    <strong id="userFullName">Pet Owner</strong>
+                    <small id="userEmail">owner@example.com</small>
+                </div>
+            </div>
+        </div>
+
+        <section class="card">
+            <div class="card-header">
+                <h2>My Medical Reports</h2>
+                <div style="color:var(--muted);font-weight:700;font-size:.9rem">Linked to your pets</div>
+            </div>
+
+            <div class="table-wrap">
+                <div class="thead">
+                    <div>Code</div>
+                    <div>Pet</div>
+                    <div>Diagnosis</div>
+                    <div>Report Date</div>
+                    <div>Veterinarian</div>
+                    <div>Action</div>
+                </div>
+                <div id="tableBody"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div class="modal" id="viewModal" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Medical Report Details</h3>
+            <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+        <div id="reportDetails"></div>
+    </div>
+</div>
+
+<script>
+    // Theme toggle
+    (function initTheme(){
+        const root=document.documentElement;
+        const saved=localStorage.getItem('theme');
+        if(saved==='light'||saved==='dark')root.setAttribute('data-theme',saved);
+        document.getElementById('themeToggle').addEventListener('click',()=>{
+            const isDark=root.getAttribute('data-theme')==='dark';
+            const next=isDark?'light':'dark';
+            root.setAttribute('data-theme',next);
+            localStorage.setItem('theme',next);
+            document.getElementById('themeToggle').innerHTML=
+                next==='dark'
+                    ?'<i class="fa-solid fa-moon"></i> Toggle Theme'
+                    :'<i class="fa-solid fa-sun"></i> Toggle Theme';
+        });
+    })();
+
+    document.getElementById('toggleSidebar').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+
+    const BASE_URL="http://localhost:8080";
+    const tableBody=document.getElementById("tableBody");
+    const modal=document.getElementById("viewModal");
+    const closeModal=document.getElementById("closeModal");
+    const details=document.getElementById("reportDetails");
+    let OWNER_ID=null;
+
+    document.addEventListener("DOMContentLoaded",async()=>{
+        const user=JSON.parse(localStorage.getItem("currentUser"));
+        if(!user){alert("Please login first");location.href="login.html";return;}
+        OWNER_ID=user.id;
+        document.getElementById('userFullName').textContent=(user.firstName||'Pet')+" "+(user.lastName||'Owner');
+        document.getElementById('userEmail').textContent=user.email||'owner@example.com';
+        document.getElementById('userAvatar').textContent=(user.firstName?.[0]||'P')+(user.lastName?.[0]||'O');
+        await loadReports();
+    });
+
+    async function api(path){
+        const res=await fetch(BASE_URL+path);
+        if(!res.ok)throw new Error(await res.text());
+        return res.json();
+    }
+
+    async function loadReports(){
+        tableBody.innerHTML=`<div class="row"><div class="cell" style="grid-column:1/-1;text-align:center;color:var(--muted)">Loading...</div></div>`;
+        try{
+            const reports=await api(`/api/v1/medical-reports/owner/${OWNER_ID}`);
+            renderTable(reports);
+        }catch(err){
+            tableBody.innerHTML=`<div class="row"><div class="cell" style="grid-column:1/-1;color:var(--error)">Error: ${err.message}</div></div>`;
+        }
+    }
+
+    function renderTable(list){
+        tableBody.innerHTML="";
+        if(!list.length){tableBody.innerHTML=`<div class="row"><div class="cell" style="grid-column:1/-1;color:var(--muted);text-align:center">No reports found</div></div>`;return;}
+        list.forEach((r,idx)=>{
+            const tr=document.createElement("div");
+            tr.className="row";tr.style.animationDelay=`${idx*40}ms`;
+            tr.innerHTML=`
+        <div class="cell"><span class="tag">${r.reportCode||'—'}</span></div>
+        <div class="cell">${r.petName||'—'}</div>
+        <div class="cell">${r.diagnosis||'—'}</div>
+        <div class="cell">${new Date(r.reportDate).toLocaleDateString()}</div>
+        <div class="cell">${r.veterinarianName||'—'}</div>
+        <div class="cell"><button class="view-btn" data-id="${r.id}"><i class="fas fa-eye"></i> View</button></div>`;
+            tableBody.appendChild(tr);
+        });
+    }
+
+    tableBody.addEventListener("click",async e=>{
+        const btn=e.target.closest("button.view-btn");
+        if(!btn)return;
+        const id=btn.dataset.id;
+        btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+        try{
+            const r=await api(`/api/v1/medical-reports/${id}`);
+            details.innerHTML=`
+        <div style="font-size:14px;line-height:1.4;">
+          <p><strong>Pet:</strong> ${r.petName}</p>
+          <p><strong>Diagnosis:</strong> ${r.diagnosis}</p>
+          <p><strong>Symptoms:</strong> ${r.symptoms||'—'}</p>
+          <p><strong>Treatment:</strong> ${r.treatment||'—'}</p>
+          <p><strong>Medications:</strong> ${r.medications||'—'}</p>
+          <p><strong>Notes:</strong> ${r.notes||'—'}</p>
+          <p><strong>Report Date:</strong> ${new Date(r.reportDate).toLocaleString()}</p>
+          <p><strong>Next Visit:</strong> ${r.nextVisitDate?new Date(r.nextVisitDate).toLocaleString():'—'}</p>
+          <p><strong>Veterinarian:</strong> ${r.veterinarianName}</p>
+        </div>`;
+            modal.setAttribute("aria-hidden","false");
+        }catch(err){alert(err.message);}
+        finally{btn.innerHTML='<i class="fas fa-eye"></i> View';}
+    });
+
+    closeModal.addEventListener("click",()=>modal.setAttribute("aria-hidden","true"));
+    window.addEventListener("click",e=>{if(e.target===modal)modal.setAttribute("aria-hidden","true");});
+</script>
+</body>
+</html>

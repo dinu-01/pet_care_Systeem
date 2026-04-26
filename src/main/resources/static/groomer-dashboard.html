@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Groomer Dashboard – Happy Paws</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg:#0b1020; --card:#121935; --primary:#7c5cff; --accent:#00d3a7;
+            --warn:#ffb020; --bad:#ff5c7a; --good:#10b981;
+            --text:#e8ecf3; --muted:#9aa3b2; --border:#243057;
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{
+            font-family:"Inter",sans-serif;
+            background:radial-gradient(1000px 600px at 20% -10%,#1b2350 0%,transparent 60%),
+            radial-gradient(1000px 600px at 90% 0%,#13234a 0%,transparent 60%),var(--bg);
+            color:var(--text); display:flex; min-height:100vh;
+        }
+        /* ===== 🔔 Announcement Dropdown (Fixed) ===== */
+        .announcement-dropdown {
+            position: absolute;
+            top: 72px;
+            right: 36px;
+            width: 300px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeDown 0.25s ease-out;
+            z-index: 2000;
+        }
+
+        .announcement-dropdown.active {
+            display: flex;
+        }
+
+        .announcement-dropdown .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+        }
+
+        .announcement-dropdown .head h3 {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+        }
+
+        .announcement-dropdown .head button {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .announcement-dropdown .head button:hover {
+            color: var(--primary);
+        }
+
+        .announcement-dropdown .content {
+            display: grid;
+            gap: 10px;
+            padding: 12px 14px;
+            max-height: 240px;
+            overflow-y: auto;
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        }
+
+        .announcement-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(14, 22, 49, 0.8);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+            display: grid;
+            gap: 4px;
+            transition: background 0.25s ease, transform 0.25s ease;
+        }
+        .announcement-item:hover {
+            background: rgba(14, 22, 49, 0.95);
+            transform: translateY(-2px);
+        }
+        .announcement-item strong {
+            color: var(--primary);
+            font-size: 14px;
+        }
+        .announcement-item p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+        .announcement-item small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* 🔴 Unread Badge */
+        .unread-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--bad);
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 6px rgba(255, 92, 122, 0.5);
+        }
+
+        /* 🔔 Bell button styling */
+        .tool {
+            position: relative;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: var(--text);
+            transition: background 0.25s ease, transform 0.2s ease;
+        }
+        .tool:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.05);
+        }
+        .tool i {
+            font-size: 16px;
+        }
+
+        /* Animation */
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* === SIDEBAR === */
+        .sidebar{
+            width:220px; background:var(--card); border-right:1px solid var(--border);
+            display:flex; flex-direction:column; justify-content:space-between;
+            padding:20px 0; position:fixed; top:0; bottom:0; left:0;
+        }
+        .sidebar h2{font-size:18px;text-align:center;color:var(--accent);}
+        .nav{
+            display:flex;flex-direction:column;margin-top:30px;
+        }
+        .nav button{
+            background:none;border:none;color:var(--muted);
+            text-align:left;padding:14px 20px;font-size:15px;
+            cursor:pointer;transition:.3s;font-weight:500;
+        }
+        .nav button i{margin-right:8px;}
+        .nav button.active, .nav button:hover{
+            background:rgba(124,92,255,0.15);color:var(--accent);
+        }
+
+        .logout{
+            border-top:1px solid var(--border);padding:10px;text-align:center;
+            color:var(--muted);font-size:14px;cursor:pointer;transition:.3s;
+        }
+        .logout:hover{color:var(--bad);}
+
+        /* === MAIN CONTENT === */
+        .main{
+            margin-left:230px;
+            flex:1;
+            padding:30px;
+        }
+
+        header{
+            display:flex;justify-content:space-between;align-items:center;
+            background:rgba(255,255,255,0.05);
+            border-radius:12px;padding:14px 20px;margin-bottom:25px;
+            border:1px solid var(--border);
+        }
+
+        h1{font-size:22px;color:var(--accent);}
+        .card{
+            background:rgba(255,255,255,0.04);
+            border:1px solid var(--border);
+            border-radius:14px;padding:20px;margin-bottom:20px;
+            box-shadow:0 6px 18px rgba(0,0,0,0.25);
+        }
+
+        label{font-size:13px;color:var(--muted);}
+        select,input,textarea{
+            width:100%;padding:10px;border-radius:10px;
+            border:1px solid var(--border);background:#0e1631;
+            color:var(--text);outline:none;margin-top:5px;margin-bottom:10px;
+        }
+
+        .btn{border:none;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;}
+        .btn-primary{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;}
+        .btn-ghost{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);}
+        .btn-primary:hover{filter:brightness(1.1)}
+        .btn-ghost:hover{background:rgba(255,255,255,0.1)}
+
+        .top-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+        .record{
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:14px 16px;margin-bottom:12px;
+            background:rgba(255,255,255,0.03);
+            display:flex;justify-content:space-between;
+            transition:.2s;
+        }
+        .record:hover{background:rgba(255,255,255,0.07);}
+        .meta{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.4;}
+        .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+
+        .section-title{font-size:20px;font-weight:700;color:var(--accent);margin-top:30px;margin-bottom:10px;}
+        .btn-refresh{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;padding:8px 14px;border:none;border-radius:8px;font-weight:600;margin-bottom:12px;cursor:pointer;}
+        .stats{display:flex;gap:10px;margin-bottom:14px;}
+        .stat-item{flex:1;min-width:100px;text-align:center;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:8px;padding:8px;color:#fff;font-weight:600;}
+
+        /* === MODAL === */
+        .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;}
+        .modal-content{background:var(--card);padding:20px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);width:400px;max-width:90%;}
+        .modal-header{font-weight:600;margin-bottom:10px;font-size:18px;text-align:center;}
+        .input-error{border-color:var(--bad)!important;}
+        .error{color:var(--bad);font-size:12px;margin-top:4px;display:none;}
+        .hidden{display:none!important;}
+    </style>
+</head>
+
+<body>
+<!-- === SIDEBAR === -->
+<div class="sidebar">
+    <div>
+        <h2>🐾 Happy Paws</h2>
+        <div class="nav">
+            <button id="btnRecords" class="active" onclick="showSection('recordsSection')"><i class="fas fa-cut"></i> Grooming Records</button>
+            <button id="btnAppointments" onclick="showSection('appointmentsSection')"><i class="fas fa-calendar-check"></i> My Appointments</button>
+        </div>
+    </div>
+    <div class="logout" onclick="alert('Logged out!')"><i class="fas fa-sign-out-alt"></i> Logout</div>
+</div>
+
+<!-- === MAIN AREA === -->
+<div class="main">
+    <header>
+        <h1><i class=""></i> Groomer Dashboard</h1>
+        <span>Welcome back, Groomer!</span>
+
+        <!-- 🔔 Announcement Icon -->
+        <div class="tool" id="announcementBtn" title="Announcements">
+            <i class="fa-solid fa-bell"></i>
+        </div>
+        <!-- 🔔 Announcement Dropdown -->
+        <div class="announcement-dropdown" id="announcementDropdown">
+            <div class="head">
+                <h3><i class="fa-solid fa-bullhorn"></i> Announcements</h3>
+                <button id="closeAnnouncements">&times;</button>
+            </div>
+            <div class="content" id="announcementList">
+                <p>No new announcements 🎉</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- 🧼 GROOMING RECORDS SECTION -->
+    <section id="recordsSection">
+        <div class="card">
+            <label>Owner</label>
+            <select id="ownerSelect" onchange="loadPets()"></select>
+            <label>Pet</label>
+            <select id="petSelect" onchange="loadRecords()" disabled>
+                <option value="">-- Select Pet --</option>
+            </select>
+        </div>
+
+        <div class="top-actions">
+            <button class="btn btn-primary" onclick="openForm()">+ Add Grooming Record</button>
+            <div id="totalCount" class="small"></div>
+        </div>
+
+        <div id="stats" class="stats"></div>
+        <div id="records" class="card small">Select a pet to view grooming records.</div>
+    </section>
+
+    <!-- 📅 APPOINTMENTS SECTION -->
+    <section id="appointmentsSection" class="hidden">
+        <h2 class="section-title"><i class="fas fa-calendar-check"></i> My Grooming Appointments</h2>
+        <button class="btn-refresh" onclick="loadMyAppointments()">⟳ Refresh</button>
+        <div id="appointmentsContainer" class="card">Loading appointments...</div>
+    </section>
+</div>
+
+<!-- === MODAL === -->
+<div id="formModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" id="formTitle">Add Grooming Record</div>
+        <label>Service Summary</label>
+        <input id="summaryInput" placeholder="Bath, haircut, nail trim..." />
+
+        <label>Groomer Name</label>
+        <input id="groomerInput" placeholder="Groomer's Name" />
+        <div id="groomerError" class="error">Groomer name cannot contain numbers</div>
+
+        <label>Price (Rs.)</label>
+        <input id="priceInput" type="number" placeholder="1500" />
+
+        <label>Duration (minutes)</label>
+        <input id="durationInput" type="number" placeholder="60" />
+
+        <label>Notes</label>
+        <textarea id="notesInput" rows="3" placeholder="Any remarks..."></textarea>
+
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn btn-ghost" onclick="closeForm()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveRecord()">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL="http://localhost:8080/api/v1";
+    const ownerSel=document.getElementById("ownerSelect");
+    const petSel=document.getElementById("petSelect");
+    const recordsDiv=document.getElementById("records");
+    const modal=document.getElementById("formModal");
+    const summaryInput=document.getElementById("summaryInput");
+    const groomerInput=document.getElementById("groomerInput");
+    const priceInput=document.getElementById("priceInput");
+    const durationInput=document.getElementById("durationInput");
+    const notesInput=document.getElementById("notesInput");
+    const groomerError=document.getElementById("groomerError");
+    let editId=null;
+
+    // Sidebar Navigation
+    function showSection(id){
+        document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+        if(id==='recordsSection')document.getElementById('btnRecords').classList.add('active');
+        else document.getElementById('btnAppointments').classList.add('active');
+    }
+
+    function validateGroomerName(name){return !/\d/.test(name);}
+    groomerInput.addEventListener('input',function(){
+        const name=this.value;
+        if(name&&!validateGroomerName(name)){
+            this.classList.add('input-error');groomerError.style.display='block';
+        }else{
+            this.classList.remove('input-error');groomerError.style.display='none';
+        }
+    });
+
+    async function loadOwners(){
+        try{
+            const res=await fetch(`${BASE_URL}/users`);
+            const users=await res.json();
+            ownerSel.innerHTML='<option value="">-- Select Owner --</option>';
+            users.filter(u=>u.role==="PET_OWNER").forEach(u=>{
+                const opt=document.createElement("option");
+                opt.value=u.id;opt.textContent=`${u.username} (${u.email})`;
+                ownerSel.appendChild(opt);
+            });
+        }catch(err){console.error(err);}
+    }
+
+    async function loadPets(){
+        const ownerId=ownerSel.value;
+        if(!ownerId){
+            petSel.innerHTML='<option value="">-- Select Pet --</option>';
+            petSel.disabled=true;recordsDiv.innerHTML="";
+            return;
+        }
+        try{
+            const res=await fetch(`${BASE_URL}/pets/owner/${ownerId}`);
+            const pets=await res.json();
+            petSel.innerHTML='<option value="">-- Select Pet --</option>';
+            pets.forEach(p=>{
+                const opt=document.createElement("option");
+                opt.value=p.id;opt.textContent=`${p.name} (${p.species})`;
+                petSel.appendChild(opt);
+            });
+            petSel.disabled=false;
+        }catch(err){console.error(err);}
+    }
+
+    async function loadRecords(){
+        const ownerId=ownerSel.value,petId=petSel.value;
+        if(!ownerId||!petId)return;
+        recordsDiv.innerHTML="<div class='meta'>Loading...</div>";
+        try{
+            const res=await fetch(`${BASE_URL}/grooming/records/owner/${ownerId}/pet/${petId}`);
+            const data=await res.json();
+            document.getElementById("totalCount").textContent=`${data.length} records`;
+            renderStats(data);
+            if(!data.length){recordsDiv.innerHTML="<div class='meta'>No grooming records yet.</div>";return;}
+            recordsDiv.innerHTML="";
+            data.forEach(r=>recordsDiv.appendChild(renderRecord(r)));
+        }catch(err){console.error(err);}
+    }
+
+    function renderRecord(r){
+        const div=document.createElement("div");
+        div.className="record";
+        div.innerHTML=`
+        <div>
+          <strong>${r.serviceSummary||"Grooming Service"}</strong>
+          <div class="meta">💇 ${r.groomerName||"-"} | 💰 Rs.${r.price||0} | ⏱ ${r.durationMinutes||0} min<br>
+          📅 ${r.performedAt?new Date(r.performedAt).toLocaleDateString():"Not Set"}<br>
+          📝 ${r.notes||""}</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="editRecord(${r.id},'${escapeStr(r.serviceSummary)}','${escapeStr(r.groomerName)}',${r.price||0},${r.durationMinutes||0},'${escapeStr(r.notes)}')">Edit</button>
+          <button class="btn btn-ghost" style="color:var(--bad)" onclick="deleteRecord(${r.id})">Delete</button>
+        </div>`;
+        return div;
+    }
+    function escapeStr(str){return(str||"").replace(/'/g,"\\'");}
+
+    function openForm(){
+        if(!ownerSel.value||!petSel.value){alert("Select owner & pet first");return;}
+        editId=null;document.getElementById("formTitle").textContent="Add Grooming Record";
+        summaryInput.value=groomerInput.value=priceInput.value=durationInput.value=notesInput.value="";
+        groomerInput.classList.remove('input-error');groomerError.style.display='none';
+        modal.style.display="flex";
+    }
+    function closeForm(){modal.style.display="none";}
+    function editRecord(id,summary,groomer,price,duration,notes){
+        editId=id;
+        document.getElementById("formTitle").textContent="Edit Grooming Record";
+        summaryInput.value=summary;groomerInput.value=groomer;
+        priceInput.value=price;durationInput.value=duration;notesInput.value=notes;
+        modal.style.display="flex";
+    }
+
+    async function saveRecord(){
+        const groomerName=groomerInput.value.trim();
+        if(groomerName&&!validateGroomerName(groomerName)){alert("Invalid groomer name");return;}
+        const ownerId=ownerSel.value,petId=petSel.value;
+        const payload={serviceSummary:summaryInput.value,groomerName:groomerName,price:parseFloat(priceInput.value)||0,durationMinutes:parseInt(durationInput.value)||0,notes:notesInput.value};
+        const method=editId?"PUT":"POST";
+        const url=editId?`${BASE_URL}/grooming/records/owner/${ownerId}/${editId}`:`${BASE_URL}/grooming/records/owner/${ownerId}/pet/${petId}`;
+        try{
+            const res=await fetch(url,{method,headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+            if(!res.ok)throw new Error("Save failed");
+            alert(editId?"Updated successfully":"Created successfully");
+            closeForm();loadRecords();
+        }catch(err){console.error(err);}
+    }
+
+    async function deleteRecord(id){
+        if(!confirm("Delete this record?"))return;
+        const ownerId=ownerSel.value;
+        try{
+            const res=await fetch(`${BASE_URL}/grooming/records/owner/${ownerId}/${id}`,{method:"DELETE"});
+            if(!res.ok)throw new Error("Delete failed");
+            alert("Deleted successfully");loadRecords();
+        }catch(err){console.error(err);}
+    }
+
+    function renderStats(list){
+        const active=list.filter(r=>r.isActive).length,inactive=list.length-active;
+        document.getElementById("stats").innerHTML=`
+        <div class='stat-item'>Total<br>${list.length}</div>
+        <div class='stat-item'>Active<br>${active}</div>
+        <div class='stat-item'>Inactive<br>${inactive}</div>`;
+    }
+
+    // === APPOINTMENTS ===
+    async function loadMyAppointments(){
+        const cont=document.getElementById("appointmentsContainer");
+        cont.innerHTML="<div class='meta'>Loading appointments...</div>";
+        try{
+            const res=await fetch(`${BASE_URL}/appointment/all`);
+            if(!res.ok)throw new Error("Failed");
+            const data=await res.json();
+            const groomingOnly=data.filter(a=>a.serviceType==="GROOMING");
+            if(!groomingOnly.length){cont.innerHTML="<div class='meta'>No grooming appointments.</div>";return;}
+            cont.innerHTML="";
+            groomingOnly.forEach(a=>{
+                const div=document.createElement("div");
+                div.className="record";
+                div.innerHTML=`
+            <div>
+              <strong>🐾 ${a.petName}</strong> (${a.petSpecies||""})
+              <div class="meta">
+                👤 Owner: ${a.ownerName}<br>
+                📅 ${new Date(a.appointmentDateTime).toLocaleString()}<br>
+                💬 ${a.description||"No notes"}<br>
+                <b style="color:${a.status==='CANCELLED'?'var(--bad)':'var(--good)'}">${a.status}</b>
+              </div>
+            </div>`;
+                cont.appendChild(div);
+            });
+        }catch(err){console.error(err);cont.innerHTML="<div class='meta'>Error loading appointments.</div>";}
+    }
+    // ======================================================
+    // 🐾 ROLE-BASED ANNOUNCEMENTS FETCHER (User Dashboard)
+    // ======================================================
+    const ANNOUNCEMENT_URL = "http://localhost:8080/api/v1/announcements/view-all";
+    const announcementDropdown = document.getElementById("announcementDropdown");
+    const announcementBtn = document.getElementById("announcementBtn");
+    const announcementList = document.getElementById("announcementList");
+    const closeAnnouncements = document.getElementById("closeAnnouncements");
+    const unreadBadge = document.createElement("span");
+
+    unreadBadge.className = "unread-badge";
+    announcementBtn.appendChild(unreadBadge);
+
+    async function loadRoleAnnouncements() {
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser) return;
+
+        const userRole = currentUser.role; // e.g. PET_OWNER / SHOP_KEEPER / VETERINARIAN
+        try {
+            const res = await fetch(ANNOUNCEMENT_URL);
+            const list = await res.json();
+
+            // Filter announcements that match the role or are for ALL
+            const filtered = list.filter(a =>
+                a.targetRole === "ALL" || a.targetRole === userRole
+            ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (filtered.length === 0) {
+                announcementList.innerHTML = `<p class="muted">No announcements 🎉</p>`;
+                unreadBadge.style.display = "none";
+                return;
+            }
+
+            // Show unread badge count
+            unreadBadge.textContent = filtered.length;
+            unreadBadge.style.display = "inline-flex";
+
+            // Render list
+            announcementList.innerHTML = filtered.map(a => `
+      <div class="announcement-item">
+        <strong>${a.title}</strong>
+        <p>${a.message}</p>
+        <small>${new Date(a.createdAt).toLocaleString()}</small>
+      </div>
+    `).join("");
+        } catch (err) {
+            console.error("Error loading announcements:", err);
+            announcementList.innerHTML = `<p style="color:var(--error)">⚠️ Failed to load announcements</p>`;
+        }
+    }
+
+    // Toggle dropdown
+    announcementBtn.addEventListener("click", () => {
+        const visible = announcementDropdown.classList.toggle("active");
+        if (visible) loadRoleAnnouncements();
+    });
+
+    // Close dropdown
+    closeAnnouncements.addEventListener("click", () => {
+        announcementDropdown.classList.remove("active");
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+        if (!announcementDropdown.contains(e.target) && !announcementBtn.contains(e.target)) {
+            announcementDropdown.classList.remove("active");
+        }
+    });
+
+
+    setInterval(loadMyAppointments,30000);
+    window.addEventListener("click",e=>{if(e.target===modal)closeForm();});
+    loadOwners();loadMyAppointments();
+</script>
+</body>
+</html>

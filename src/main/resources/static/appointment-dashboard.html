@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Appointment Manager – Happy Paws</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --bg:#0b1020;
+            --card:#121935;
+            --primary:#7c5cff;
+            --accent:#00d3a7;
+            --warn:#ffb020;
+            --bad:#ff5c7a;
+            --good:#10b981;
+            --text:#e8ecf3;
+            --muted:#9aa3b2;
+            --border:#243057;
+            --ring:rgba(124,92,255,.35);
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;font-family:"Inter",sans-serif;
+            background:
+                    radial-gradient(1000px 600px at 20% -10%,#1b2350 0%,transparent 60%),
+                    radial-gradient(1000px 600px at 90% 0%,#13234a 0%,transparent 60%),
+                    var(--bg);
+            color:var(--text);
+            min-height:100vh;
+        }
+        /* ===== 🔔 Announcement Dropdown (Fixed) ===== */
+        .announcement-dropdown {
+            position: absolute;
+            top: 72px;
+            right: 36px;
+            width: 300px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeDown 0.25s ease-out;
+            z-index: 2000;
+        }
+
+        .announcement-dropdown.active {
+            display: flex;
+        }
+
+        .announcement-dropdown .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+        }
+
+        .announcement-dropdown .head h3 {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+        }
+
+        .announcement-dropdown .head button {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .announcement-dropdown .head button:hover {
+            color: var(--primary);
+        }
+
+        .announcement-dropdown .content {
+            display: grid;
+            gap: 10px;
+            padding: 12px 14px;
+            max-height: 240px;
+            overflow-y: auto;
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        }
+
+        .announcement-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(14, 22, 49, 0.8);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+            display: grid;
+            gap: 4px;
+            transition: background 0.25s ease, transform 0.25s ease;
+        }
+        .announcement-item:hover {
+            background: rgba(14, 22, 49, 0.95);
+            transform: translateY(-2px);
+        }
+        .announcement-item strong {
+            color: var(--primary);
+            font-size: 14px;
+        }
+        .announcement-item p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+        .announcement-item small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* 🔴 Unread Badge */
+        .unread-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--bad);
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 6px rgba(255, 92, 122, 0.5);
+        }
+
+        /* 🔔 Bell button styling */
+        .tool {
+            position: relative;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: var(--text);
+            transition: background 0.25s ease, transform 0.2s ease;
+        }
+        .tool:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.05);
+        }
+        .tool i {
+            font-size: 16px;
+        }
+
+        /* Animation */
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        .container{max-width:1200px;margin:32px auto;padding:0 16px}
+        header{
+            display:flex;justify-content:space-between;align-items:center;
+            background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0));
+            border-bottom:1px solid var(--border);
+            padding:16px 24px;border-radius:14px;backdrop-filter:blur(8px);
+            box-shadow:0 8px 24px rgba(0,0,0,.3);
+        }
+        header h1{font-size:20px;margin:0;font-weight:600}
+        .small{font-size:13px;color:var(--muted)}
+        .top-actions{display:flex;gap:10px;align-items:center}
+        .btn{
+            border:none;border-radius:8px;padding:8px 14px;cursor:pointer;
+            font-weight:600;font-size:14px;transition:.25s;
+        }
+        .btn-primary{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;}
+        .btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border);}
+        .btn-primary:hover{filter:brightness(1.1);}
+        .btn-ghost:hover{background:rgba(255,255,255,.1);}
+        .grid{display:grid;grid-template-columns:340px 1fr;gap:20px;margin-top:24px;}
+        .card{
+            background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+            border:1px solid var(--border);
+            border-radius:16px;padding:18px;
+            box-shadow:0 8px 24px rgba(0,0,0,.25);
+        }
+        label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+        input,select{
+            width:100%;padding:10px 12px;border-radius:10px;
+            border:1px solid var(--border);background:#0e1631;color:var(--text);
+            outline:none;transition:.2s border,.2s box-shadow;
+        }
+        input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--ring);}
+        .slot-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:10px}
+        .slot{padding:8px;border-radius:8px;border:1px solid var(--border);text-align:center;font-size:13px;background:#0e1631;}
+        .slot:hover{border-color:var(--primary);color:var(--primary);}
+        .appointments{display:grid;gap:12px;}
+        .appt{
+            padding:14px;border-radius:12px;border:1px solid var(--border);
+            background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+            display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+            box-shadow:0 5px 15px rgba(0,0,0,.2);
+        }
+        .meta{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.4}
+        .status{font-weight:700;padding:6px 8px;border-radius:8px;font-size:13px;display:inline-block}
+        .status.pending{color:var(--warn);background:rgba(255,176,32,.08)}
+        .status.confirmed{color:var(--good);background:rgba(16,185,129,.08)}
+        .status.cancelled{color:var(--bad);background:rgba(255,92,122,.08)}
+        .status.completed{color:#7ee0ff;background:rgba(126,224,255,.08)}
+        .status.rescheduled{color:var(--accent);background:rgba(0,211,167,.08)}
+        .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+        .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+        .stat-item{
+            background:linear-gradient(90deg,var(--primary),var(--accent));
+            color:#fff;padding:10px;border-radius:8px;min-width:110px;text-align:center;
+            font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);
+        }
+        #userInfo{text-align:right;line-height:1.3}
+        #userInfo span{display:block;font-size:13px}
+        @media(max-width:900px){.grid{grid-template-columns:1fr;}header{flex-direction:column;align-items:flex-start;gap:10px}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1><i class="fas fa-calendar-check"></i> Appointment Manager — Happy Paws</h1>
+            <div class="small">Manage, confirm, reschedule and view statistics</div>
+        </div>
+        <div id="userInfo">
+            <span id="userName"></span>
+            <span id="userEmail" class="small"></span>
+        </div>
+        <!-- 🔔 Announcement Icon -->
+        <div class="tool" id="announcementBtn" title="Announcements">
+            <i class="fa-solid fa-bell"></i>
+        </div>
+        <!-- 🔔 Announcement Dropdown -->
+        <div class="announcement-dropdown" id="announcementDropdown">
+            <div class="head">
+                <h3><i class="fa-solid fa-bullhorn"></i> Announcements</h3>
+                <button id="closeAnnouncements">&times;</button>
+            </div>
+            <div class="content" id="announcementList">
+                <p>No new announcements 🎉</p>
+            </div>
+        </div>
+
+    </header>
+
+
+    <div class="top-actions" style="margin-top:16px;">
+        <button class="btn btn-ghost" onclick="refresh()">Refresh</button>
+        <button class="btn btn-primary" onclick="exportJSON()"></button>
+    </div>
+
+    <div class="grid">
+        <!-- LEFT -->
+        <div class="card">
+            <div class="field">
+                <label>Filter by status</label>
+                <select id="filterStatus" onchange="loadAppointments()">
+                    <option value="ALL">All</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Rescheduled">Rescheduled</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Filter by date</label>
+                <input type="date" id="filterDate" onchange="loadAppointments()"/>
+                <button class="btn btn-ghost" style="margin-top:8px" onclick="document.getElementById('filterDate').value='';loadAppointments()">Clear date</button>
+            </div>
+
+            <div class="field">
+                <label>Search (pet / service)</label>
+                <input id="searchBox" placeholder="Type to search..." oninput="loadAppointments()"/>
+            </div>
+
+            <div style="margin-top:14px">
+                <label>Quick stats</label>
+                <div class="stats" id="statsBox"></div>
+            </div>
+
+            <div style="margin-top:16px">
+                <label>Available slots preview</label>
+                <input type="date" id="previewDate" onchange="renderPreviewSlots()" style="margin-bottom:6px"/>
+                <div id="previewSlots" class="slot-list small">Select a date to preview slots</div>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+            <div class="card" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+                <div>
+                    <strong>Appointments</strong>
+                    <div class="small">Manager controls: Confirm · Reschedule · Cancel · Complete · Delete</div>
+                </div>
+                <div class="small" id="totalCount"></div>
+            </div>
+            <div id="appointments" class="appointments"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_URL = "http://localhost:8080/api/v1/appointment";
+
+    /* =================== FETCH FUNCTIONS =================== */
+
+    // Get all appointments
+    async function fetchAppointments() {
+        const res = await fetch(`${BASE_URL}/all`);
+        if (!res.ok) throw new Error("Failed to load appointments");
+        return await res.json();
+    }
+
+    // Confirm appointment
+    async function confirmAppointment(id) {
+        const res = await fetch(`${BASE_URL}/manager/${id}/confirm`, { method: "PUT" });
+        if (!res.ok) throw new Error("Failed to confirm");
+        return await res.json();
+    }
+
+    // Cancel appointment
+    async function cancelAppointment(id, reason) {
+        const res = await fetch(`${BASE_URL}/manager/${id}/cancel?reason=${encodeURIComponent(reason || "No reason")}`, { method: "PUT" });
+        if (!res.ok) throw new Error("Failed to cancel");
+        return await res.json();
+    }
+
+    // Complete appointment
+    async function completeAppointment(id) {
+        const res = await fetch(`${BASE_URL}/manager/${id}/complete`, { method: "PUT" });
+        if (!res.ok) throw new Error("Failed to complete");
+        return await res.json();
+    }
+
+    // Delete appointment
+    async function deleteAppointment(id) {
+        const res = await fetch(`${BASE_URL}/delete/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to delete");
+    }
+
+    // Reschedule appointment
+    async function rescheduleAppointment(id, newDateTime) {
+        const res = await fetch(`${BASE_URL}/manager/${id}/reschedule?newDateTime=${encodeURIComponent(newDateTime)}`, { method: "PUT" });
+        if (!res.ok) throw new Error("Failed to reschedule");
+        return await res.json();
+    }
+
+    /* =================== UI & LOGIC =================== */
+
+    function formatDateTime(dt) {
+        const d = new Date(dt);
+        return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    }
+
+    async function loadAppointments() {
+        const container = document.getElementById("appointments");
+        container.innerHTML = "<div class='card small'>Loading...</div>";
+
+        try {
+            const data = await fetchAppointments();
+            const status = document.getElementById("filterStatus").value;
+            const date = document.getElementById("filterDate").value;
+            const q = document.getElementById("searchBox").value.trim().toLowerCase();
+
+            let list = data;
+            if (status !== "ALL") list = list.filter(a => a.status === status.toUpperCase());
+            if (date) list = list.filter(a => a.appointmentDateTime.startsWith(date));
+            if (q) list = list.filter(a =>
+                (a.petName + " " + a.serviceType + " " + (a.description || "")).toLowerCase().includes(q)
+            );
+
+            renderStats(data);
+            document.getElementById("totalCount").textContent = `${list.length} shown`;
+            container.innerHTML = list.length ? "" : "<div class='card small'>No appointments found.</div>";
+            list.forEach(a => container.appendChild(renderAppointmentCard(a)));
+
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = "<div class='card small'>❌ Failed to load appointments.</div>";
+        }
+    }
+
+    function renderAppointmentCard(a) {
+        const div = document.createElement("div");
+        div.className = "appt";
+
+        const left = document.createElement("div");
+        left.innerHTML = `
+    <strong>${a.serviceType}</strong>
+    <div class='meta'>📅 ${formatDateTime(a.appointmentDateTime)}<br>
+    🐾 Pet: ${a.petName} (${a.petSpecies || ""})</div>
+  `;
+
+        const right = document.createElement("div");
+        right.style.textAlign = "right";
+
+        const s = document.createElement("div");
+        s.className = "status " + (a.status || "PENDING").toLowerCase();
+        s.textContent = a.status;
+
+        const act = document.createElement("div");
+        act.className = "actions";
+
+        if (a.status === "PENDING") act.appendChild(btn("Confirm", "btn-primary", () => handleConfirm(a.id)));
+        if (["PENDING","SCHEDULED","CONFIRMED","RESCHEDULED"].includes(a.status)) {
+            act.appendChild(btn("Reschedule", "btn-ghost", () => handleReschedule(a.id)));
+            act.appendChild(btn("Cancel", "btn-ghost", () => handleCancel(a.id)));
+        }
+        if (a.status === "CONFIRMED") act.appendChild(btn("Complete", "btn-ghost", () => handleComplete(a.id)));
+        act.appendChild(btn("Delete", "btn-ghost", () => handleDelete(a.id)));
+
+        right.appendChild(s);
+        right.appendChild(act);
+
+        div.appendChild(left);
+        div.appendChild(right);
+        return div;
+    }
+
+    function btn(label, cls, onClick) {
+        const b = document.createElement("button");
+        b.className = "btn " + cls;
+        b.textContent = label;
+        b.onclick = onClick;
+        return b;
+    }
+
+    /* =================== ACTION HANDLERS =================== */
+
+    async function handleConfirm(id) {
+        if (!confirm("Confirm this appointment?")) return;
+        await confirmAppointment(id);
+        alert("✅ Appointment confirmed!");
+        loadAppointments();
+    }
+
+    async function handleCancel(id) {
+        const reason = prompt("Enter cancel reason:");
+        if (reason === null) return;
+        await cancelAppointment(id, reason);
+        alert("❌ Appointment cancelled.");
+        loadAppointments();
+    }
+
+    async function handleComplete(id) {
+        await completeAppointment(id);
+        alert("🏁 Appointment marked completed.");
+        loadAppointments();
+    }
+
+    async function handleDelete(id) {
+        if (!confirm("Delete this appointment permanently?")) return;
+        await deleteAppointment(id);
+        alert("🗑️ Deleted successfully.");
+        loadAppointments();
+    }
+
+    async function handleReschedule(id) {
+        const date = prompt("Enter new date (YYYY-MM-DD):");
+        const time = prompt("Enter new time (HH:MM, 24h):");
+        if (!date || !time) return;
+        const iso = `${date}T${time}:00`;
+        await rescheduleAppointment(id, iso);
+        alert(`📅 Rescheduled to ${date} ${time}`);
+        loadAppointments();
+    }
+
+    /* =================== STATS =================== */
+
+    function renderStats(all) {
+        const totals = { total: all.length };
+        const statuses = ["PENDING", "SCHEDULED", "CONFIRMED", "RESCHEDULED", "CANCELLED", "COMPLETED"];
+        statuses.forEach(s => totals[s] = all.filter(a => a.status === s).length);
+
+        const sb = document.getElementById("statsBox");
+        sb.innerHTML = `
+    <div class='stat-item'>Total<br>${totals.total}</div>
+    <div class='stat-item'>Pending<br>${totals.PENDING}</div>
+    <div class='stat-item'>Confirmed<br>${totals.CONFIRMED}</div>
+    <div class='stat-item'>Rescheduled<br>${totals.RESCHEDULED}</div>
+    <div class='stat-item'>Cancelled<br>${totals.CANCELLED}</div>
+    <div class='stat-item'>Completed<br>${totals.COMPLETED}</div>`;
+    }
+
+    /* =================== OTHER UI =================== */
+
+    function refresh() { loadAppointments(); }
+
+    /* =================== INIT =================== */
+    loadAppointments();
+    // ======================================================
+    // 🐾 ROLE-BASED ANNOUNCEMENTS FETCHER (User Dashboard)
+    // ======================================================
+    const ANNOUNCEMENT_URL = "http://localhost:8080/api/v1/announcements/view-all";
+    const announcementDropdown = document.getElementById("announcementDropdown");
+    const announcementBtn = document.getElementById("announcementBtn");
+    const announcementList = document.getElementById("announcementList");
+    const closeAnnouncements = document.getElementById("closeAnnouncements");
+    const unreadBadge = document.createElement("span");
+
+    unreadBadge.className = "unread-badge";
+    announcementBtn.appendChild(unreadBadge);
+
+    async function loadRoleAnnouncements() {
+        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser) return;
+
+        const userRole = currentUser.role; // e.g. PET_OWNER / SHOP_KEEPER / VETERINARIAN
+        try {
+            const res = await fetch(ANNOUNCEMENT_URL);
+            const list = await res.json();
+
+            // Filter announcements that match the role or are for ALL
+            const filtered = list.filter(a =>
+                a.targetRole === "ALL" || a.targetRole === userRole
+            ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (filtered.length === 0) {
+                announcementList.innerHTML = `<p class="muted">No announcements 🎉</p>`;
+                unreadBadge.style.display = "none";
+                return;
+            }
+
+            // Show unread badge count
+            unreadBadge.textContent = filtered.length;
+            unreadBadge.style.display = "inline-flex";
+
+            // Render list
+            announcementList.innerHTML = filtered.map(a => `
+      <div class="announcement-item">
+        <strong>${a.title}</strong>
+        <p>${a.message}</p>
+        <small>${new Date(a.createdAt).toLocaleString()}</small>
+      </div>
+    `).join("");
+        } catch (err) {
+            console.error("Error loading announcements:", err);
+            announcementList.innerHTML = `<p style="color:var(--error)">⚠️ Failed to load announcements</p>`;
+        }
+    }
+
+    // Toggle dropdown
+    announcementBtn.addEventListener("click", () => {
+        const visible = announcementDropdown.classList.toggle("active");
+        if (visible) loadRoleAnnouncements();
+    });
+
+    // Close dropdown
+    closeAnnouncements.addEventListener("click", () => {
+        announcementDropdown.classList.remove("active");
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+        if (!announcementDropdown.contains(e.target) && !announcementBtn.contains(e.target)) {
+            announcementDropdown.classList.remove("active");
+        }
+    });
+
+
+</script>
+</body>
+</html>

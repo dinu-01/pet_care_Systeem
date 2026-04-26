@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Happy Paws – Manage Users</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1020;--card:#121935;--primary:#7c5cff;--accent:#00d3a7;
+      --warn:#ffb020;--bad:#ff5c7a;--good:#10b981;--text:#e8ecf3;
+      --muted:#9aa3b2;--border:#243057;--ring:rgba(124,92,255,.35)
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:"Inter",sans-serif;color:var(--text);
+      background:
+              radial-gradient(1000px 600px at 20% -10%,#1b2350 0%,transparent 60%),
+              radial-gradient(1000px 600px at 90% 0%,#13234a 0%,transparent 60%),var(--bg);
+      min-height:100vh;
+    }
+    .container{max-width:1200px;margin:32px auto;padding:0 16px}
+    header{
+      display:flex;justify-content:space-between;align-items:center;
+      background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0));
+      border-bottom:1px solid var(--border);
+      padding:16px 24px;border-radius:14px;backdrop-filter:blur(8px);
+      box-shadow:0 8px 24px rgba(0,0,0,.3);
+    }
+    header h1{font-size:20px;margin:0;font-weight:600}
+    .small{font-size:13px;color:var(--muted)}
+    .btn{
+      border:none;border-radius:8px;padding:8px 14px;cursor:pointer;
+      font-weight:600;font-size:14px;transition:.25s;
+    }
+    .btn-primary{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;}
+    .btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border);}
+    .btn-danger{background:linear-gradient(90deg,var(--bad),#ff7fa0);color:#fff;border:none;}
+    .btn-primary:hover,.btn-danger:hover{filter:brightness(1.1);}
+    .btn-ghost:hover{background:rgba(255,255,255,.1);}
+
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+      border:1px solid var(--border);border-radius:16px;padding:18px;
+      box-shadow:0 8px 24px rgba(0,0,0,.25);margin-top:20px;
+    }
+
+    .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:12px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:12px 10px;border-bottom:1px solid var(--border)}
+    th{position:sticky;top:0;background:#0f1837;text-align:left}
+
+    .role-tag{
+      font-size:12px;padding:4px 8px;border-radius:6px;font-weight:600;
+    }
+    .role-ADMIN{background:rgba(124,92,255,.2);color:#a78bfa;}
+    .role-PET_OWNER{background:rgba(16,185,129,.2);color:#34d399;}
+    .role-VETERINARIAN{background:rgba(245,158,11,.2);color:#fbbf24;}
+    .role-SHOP_KEEPER{background:rgba(59,130,246,.2);color:#60a5fa;}
+    .role-APPOINTMENT_MANAGER{background:rgba(168,85,247,.2);color:#c084fc;}
+
+    .actions{display:flex;gap:8px}
+
+    .stats{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+    .stat-item{
+      background:linear-gradient(90deg,var(--primary),var(--accent));
+      color:#fff;padding:10px;border-radius:8px;min-width:110px;text-align:center;
+      font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);
+    }
+
+    input,select{
+      width:100%;padding:10px 12px;border-radius:10px;
+      border:1px solid var(--border);background:#0e1631;color:var(--text);
+      outline:none;transition:.2s border,.2s box-shadow;
+    }
+    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--ring);}
+
+    .filters{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;margin-bottom:16px}
+
+    #toast{position:fixed;bottom:20px;right:20px;display:grid;gap:8px;z-index:20}
+    .toast{
+      background:#0e1631;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;
+      box-shadow:0 10px 24px rgba(0,0,0,.35);animation:slideIn .25s ease-out;
+    }
+    .toast.success{border-color:#1e9d7a}.toast.error{border-color:#cc3b5a}
+    @keyframes slideIn{from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1}}
+
+    @media(max-width:768px){
+      .filters{grid-template-columns:1fr}
+      .actions{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>👥 User Management</h1>
+      <div class="small">Admin Panel - View and Manage System Users</div>
+    </div>
+    <div class="small" id="userInfo"></div>
+  </header>
+
+  <div class="card">
+    <div class="filters">
+      <div>
+        <label class="small">Search Users</label>
+        <input id="searchInput" placeholder="Search by name, email, role...">
+      </div>
+      <div>
+        <label class="small">Filter by Role</label>
+        <select id="roleFilter">
+          <option value="">All Roles</option>
+          <option value="ADMIN">Admin</option>
+          <option value="PET_OWNER">Pet Owner</option>
+          <option value="VETERINARIAN">Veterinarian</option>
+          <option value="SHOP_KEEPER">Shop Keeper</option>
+          <option value="APPOINTMENT_MANAGER">Appointment Manager</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:end;gap:8px">
+        <button class="btn btn-ghost" onclick="loadUsers()">Refresh</button>
+        <button class="btn btn-primary" onclick="exportUsers()">Export</button>
+      </div>
+    </div>
+
+    <div class="stats" id="statsContainer">
+      <div class="stat-item">Total<br><span id="totalUsers">0</span></div>
+      <!-- Stats will be populated by JavaScript -->
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <strong>System Users</strong>
+      <div class="small" id="resultCount">Loading...</div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="usersTable">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Created At</th>
+          <th>Pets</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="usersTableBody">
+        <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">Loading users...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ===== CONFIGURATION =====
+  const BASE_URL = "http://localhost:8080";
+  let allUsers = [];
+
+  // ===== INITIALIZATION =====
+  document.addEventListener('DOMContentLoaded', function() {
+    checkAdminAccess();
+    loadUsers();
+  });
+
+  function checkAdminAccess() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser || currentUser.role !== 'ADMIN') {
+      alert('🚫 Access Denied - Admin privileges required');
+      window.location.href = 'login.html';
+      return;
+    }
+    document.getElementById('userInfo').innerHTML =
+            `Logged in as: <strong>${currentUser.username}</strong> (ADMIN)`;
+  }
+
+  // ===== API FUNCTIONS =====
+  async function apiCall(endpoint, options = {}) {
+    try {
+      const response = await fetch(BASE_URL + endpoint, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        },
+        ...options
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  }
+
+  // ===== USER MANAGEMENT =====
+  async function loadUsers() {
+    try {
+      showLoading(true);
+      allUsers = await apiCall('/api/v1/users/admin/all');
+      renderUsers(allUsers);
+      updateStats(allUsers);
+      showNotification('✅ Users loaded successfully', 'success');
+    } catch (error) {
+      console.error('Error loading users:', error);
+      showNotification('❌ Failed to load users: ' + error.message, 'error');
+      document.getElementById('usersTableBody').innerHTML =
+              '<tr><td colspan="7" style="text-align:center;color:var(--bad);padding:2rem;">Error loading users</td></tr>';
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function deleteUser(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+
+    // Prevent self-deletion
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (user.id === currentUser.id) {
+      showNotification('❌ You cannot delete your own account', 'error');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete user "${user.username}"?\n\nThis action cannot be undone!`)) {
+      return;
+    }
+
+    try {
+      await apiCall(`/api/v1/users/admin/delete/${userId}`, { method: 'DELETE' });
+      showNotification(`✅ User "${user.username}" deleted successfully`, 'success');
+
+      // Remove from local array and re-render
+      allUsers = allUsers.filter(u => u.id !== userId);
+      renderUsers(allUsers);
+      updateStats(allUsers);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showNotification('❌ Failed to delete user: ' + error.message, 'error');
+    }
+  }
+
+  // ===== RENDERING =====
+  function renderUsers(users) {
+    const tbody = document.getElementById('usersTableBody');
+
+    if (!users || users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">No users found</td></tr>';
+      document.getElementById('resultCount').textContent = '0 users';
+      return;
+    }
+
+    const filteredUsers = filterUsers(users);
+    tbody.innerHTML = filteredUsers.map(user => `
+            <tr>
+                <td>${user.id}</td>
+                <td>
+                    <div style="font-weight:600">${escapeHtml(user.username)}</div>
+                    ${user.id === JSON.parse(localStorage.getItem('currentUser')).id ?
+            '<div class="small" style="color:var(--accent);">👋 Current User</div>' : ''}
+                </td>
+                <td>${escapeHtml(user.email)}</td>
+                <td><span class="role-tag role-${user.role}">${user.role}</span></td>
+                <td>${formatDate(user.createdAt)}</td>
+                <td>${user.pets ? user.pets.length : 0}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-ghost" onclick="viewUserDetails(${user.id})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-danger"
+                                onclick="deleteUser(${user.id})"
+                                ${user.id === JSON.parse(localStorage.getItem('currentUser')).id ? 'disabled' : ''}
+                                title="Delete User">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+    document.getElementById('resultCount').textContent = `${filteredUsers.length} of ${users.length} users`;
+  }
+
+  function filterUsers(users) {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+
+    return users.filter(user => {
+      const matchesSearch = user.username.toLowerCase().includes(searchTerm) ||
+              user.email.toLowerCase().includes(searchTerm) ||
+              user.role.toLowerCase().includes(searchTerm);
+      const matchesRole = !roleFilter || user.role === roleFilter;
+
+      return matchesSearch && matchesRole;
+    });
+  }
+
+  function updateStats(users) {
+    const roleCounts = users.reduce((acc, user) => {
+      acc[user.role] = (acc[user.role] || 0) + 1;
+      return acc;
+    }, {});
+
+    const statsContainer = document.getElementById('statsContainer');
+    document.getElementById('totalUsers').textContent = users.length;
+
+    // Clear existing role stats (keep total)
+    const totalStat = statsContainer.querySelector('.stat-item:first-child');
+    statsContainer.innerHTML = '';
+    statsContainer.appendChild(totalStat);
+
+    // Add role-specific stats
+    Object.entries(roleCounts).forEach(([role, count]) => {
+      const stat = document.createElement('div');
+      stat.className = 'stat-item';
+      stat.innerHTML = `${role.replace('_', ' ')}<br>${count}`;
+      statsContainer.appendChild(stat);
+    });
+  }
+
+  function viewUserDetails(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+
+    const details = `
+User ID: ${user.id}
+Username: ${user.username}
+Email: ${user.email}
+Role: ${user.role}
+Created: ${formatDate(user.createdAt)}
+Pets: ${user.pets ? user.pets.length : 0}
+${user.pets ? `Pet Names: ${user.pets.map(p => p.name).join(', ')}` : ''}
+        `.trim();
+
+    alert('👤 User Details:\n\n' + details);
+  }
+
+  // ===== UTILITY FUNCTIONS =====
+  function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  }
+
+  function escapeHtml(unsafe) {
+    return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+  }
+
+  function showLoading(show) {
+    // You can add a loading spinner here if needed
+  }
+
+  function showNotification(message, type = "success") {
+    const toastRoot = document.getElementById('toast');
+    const notification = document.createElement('div');
+    notification.className = `toast ${type}`;
+    notification.textContent = message;
+    toastRoot.appendChild(notification);
+
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 4000);
+  }
+
+  function exportUsers() {
+    const dataStr = JSON.stringify(allUsers, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `users-export-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showNotification('📊 Users data exported', 'success');
+  }
+
+  // ===== EVENT LISTENERS =====
+  document.getElementById('searchInput').addEventListener('input', () => renderUsers(allUsers));
+  document.getElementById('roleFilter').addEventListener('change', () => renderUsers(allUsers));
+
+  // ===== GLOBAL ACCESS =====
+  window.deleteUser = deleteUser;
+  window.viewUserDetails = viewUserDetails;
+</script>
+</body>
+</html>
